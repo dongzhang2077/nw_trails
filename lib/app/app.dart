@@ -1,0 +1,44 @@
+import 'package:flutter/material.dart';
+import 'package:nw_trails/app/main_shell.dart';
+import 'package:nw_trails/app/state/app_scope.dart';
+import 'package:nw_trails/app/state/app_state.dart';
+import 'package:nw_trails/core/constants/app_theme.dart';
+import 'package:nw_trails/core/repositories/stub/stub_checkin_repository.dart';
+import 'package:nw_trails/core/repositories/stub/stub_landmark_repository.dart';
+import 'package:nw_trails/core/repositories/stub/stub_route_repository.dart';
+import 'package:nw_trails/core/services/stub_location_service.dart';
+
+class NWTrailsApp extends StatefulWidget {
+  const NWTrailsApp({super.key});
+
+  @override
+  State<NWTrailsApp> createState() => _NWTrailsAppState();
+}
+
+class _NWTrailsAppState extends State<NWTrailsApp> {
+  late final AppState _appState = AppState(
+    landmarkRepository: StubLandmarkRepository(),
+    checkInRepository: StubCheckInRepository(),
+    routeRepository: StubRouteRepository(),
+    locationService: StubLocationService(),
+  );
+
+  @override
+  void dispose() {
+    _appState.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AppScope(
+      notifier: _appState,
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        title: 'NW Trails',
+        theme: buildAppTheme(),
+        home: const MainShell(),
+      ),
+    );
+  }
+}

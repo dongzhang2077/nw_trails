@@ -71,3 +71,12 @@ git checkout -b feature/alice-checkin-ui
 
 - Contribution guide: `CONTRIBUTING.md`
 - PR template: `.github/pull_request_template.md`
+
+## Team Sync Docs
+
+- Docs index: `docs/README.md`
+- Full proposal draft: `docs/group06-proposal-draft.md`
+- Full UI/UX flow doc: `docs/ui_design_sequence_review.md`
+- UI/UX sync snapshot: `docs/design/ui_ux_flow_sync.md`
+- Proposal scope snapshot: `docs/proposal/proposal_scope_sync.md`
+- lib file ownership map: `docs/development/lib_structure_and_ownership.md`
