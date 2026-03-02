@@ -8,19 +8,24 @@ class MockLocationService {
       StreamController<Position>.broadcast();
 
   StreamSubscription<Position>? _realLocationSub;
+  Position? _lastPosition;
 
   MockLocationService(this._locationService) {
-    _locationService
-        .getCurrentPosition()
-        .then(_controller.add)
-        .catchError((_) {});
+    _locationService.getCurrentPosition().then(_emit).catchError((_) {});
     _realLocationSub = _locationService.stream.listen(
-      _controller.add,
+      _emit,
       onError: _controller.addError,
     );
   }
 
+  Position? get lastKnownPosition => _lastPosition;
+
   Stream<Position> get stream => _controller.stream;
+
+  void _emit(Position position) {
+    _lastPosition = position;
+    _controller.add(position);
+  }
 
   void injectLocation(double latitude, double longitude) {
     _controller.add(

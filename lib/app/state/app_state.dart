@@ -58,6 +58,7 @@ class AppState extends ChangeNotifier {
   String? _activeRouteId;
 
   Stream<geo.Position> get locationStream => _mockLocationService.stream;
+  geo.Position? get lastKnownPosition => _mockLocationService.lastKnownPosition;
 
   void injectLocation(double lat, double lng) =>
       _mockLocationService.injectLocation(lat, lng);

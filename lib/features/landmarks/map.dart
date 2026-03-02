@@ -53,7 +53,10 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_locationSub == null) {
-      _locationSub = AppScope.of(context).locationStream.listen(_onPosition);
+      final appState = AppScope.of(context);
+      _locationSub = appState.locationStream.listen(_onPosition);
+      final last = appState.lastKnownPosition;
+      if (last != null) _onPosition(last);
     }
   }
 
