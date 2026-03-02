@@ -7,9 +7,21 @@ import 'package:flutter_joystick/flutter_joystick.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 import 'package:nw_trails/app/state/app_scope.dart';
+import 'package:nw_trails/core/constants/category_colors.dart';
+import 'package:nw_trails/core/models/landmark.dart';
+import 'package:nw_trails/core/models/landmark_category.dart';
 
 class NwTrailsMap extends StatefulWidget {
-  const NwTrailsMap({super.key});
+  const NwTrailsMap({
+    super.key,
+    required this.landmarks,
+    this.selectedLandmarkId,
+    this.onLandmarkTap,
+  });
+
+  final List<Landmark> landmarks;
+  final String? selectedLandmarkId;
+  final ValueChanged<Landmark>? onLandmarkTap;
 
   @override
   State<NwTrailsMap> createState() => _NwTrailsMapState();
@@ -22,6 +34,10 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
   StreamSubscription<geo.Position>? _locationSub;
   Uint8List? _markerImage;
   geo.Position? _pendingPosition;
+
+  final Map<String, PointAnnotation> _landmarkAnnotations = {};
+  final Map<String, String> _annotationIdToLandmarkId = {};
+  final Map<(LandmarkCategory, bool), Uint8List> _pinImageCache = {};
 
   bool _joystickVisible = false;
   bool _creatingMarker = false;
@@ -42,6 +58,14 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
   }
 
   @override
+  void didUpdateWidget(NwTrailsMap old) {
+    super.didUpdateWidget(old);
+    if (old.selectedLandmarkId != widget.selectedLandmarkId) {
+      _updateSelection(old.selectedLandmarkId, widget.selectedLandmarkId);
+    }
+  }
+
+  @override
   void dispose() {
     _locationSub?.cancel();
     super.dispose();
@@ -51,10 +75,105 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
     _mapboxMap = mapboxMap;
     _annotationManager = await mapboxMap.annotations
         .createPointAnnotationManager();
+    _annotationManager!.addOnPointAnnotationClickListener(
+      _LandmarkClickListener(_onAnnotationTap),
+    );
+
+    await _createLandmarkAnnotations();
 
     final seed = _pendingPosition;
     _pendingPosition = null;
     if (seed != null) await _onPosition(seed);
+  }
+
+  void _onAnnotationTap(PointAnnotation annotation) {
+    final landmarkId = _annotationIdToLandmarkId[annotation.id];
+    if (landmarkId == null) return;
+    final landmark = widget.landmarks
+        .where((l) => l.id == landmarkId)
+        .firstOrNull;
+    if (landmark != null) widget.onLandmarkTap?.call(landmark);
+  }
+
+  Future<void> _createLandmarkAnnotations() async {
+    final manager = _annotationManager;
+    if (manager == null) return;
+
+    for (final landmark in widget.landmarks) {
+      final isSelected = landmark.id == widget.selectedLandmarkId;
+      final image = await _pinImage(landmark.category, isSelected);
+      final annotation = await manager.create(
+        PointAnnotationOptions(
+          geometry: landmark.point,
+          image: image,
+          iconSize: isSelected ? 1.4 : 1.0,
+        ),
+      );
+      _landmarkAnnotations[landmark.id] = annotation;
+      _annotationIdToLandmarkId[annotation.id] = landmark.id;
+    }
+  }
+
+  Future<void> _updateSelection(String? oldId, String? newId) async {
+    final manager = _annotationManager;
+    if (manager == null) return;
+
+    if (oldId != null) {
+      final ann = _landmarkAnnotations[oldId];
+      final landmark = widget.landmarks.where((l) => l.id == oldId).firstOrNull;
+      if (ann != null && landmark != null) {
+        ann.image = await _pinImage(landmark.category, false);
+        ann.iconSize = 1.0;
+        await manager.update(ann);
+      }
+    }
+
+    if (newId != null) {
+      final ann = _landmarkAnnotations[newId];
+      final landmark = widget.landmarks.where((l) => l.id == newId).firstOrNull;
+      if (ann != null && landmark != null) {
+        ann.image = await _pinImage(landmark.category, true);
+        ann.iconSize = 1.4;
+        await manager.update(ann);
+      }
+    }
+  }
+
+  Future<Uint8List> _pinImage(LandmarkCategory category, bool selected) async {
+    final key = (category, selected);
+    if (_pinImageCache.containsKey(key)) return _pinImageCache[key]!;
+    final image = await _buildPinImage(categoryColor(category), selected);
+    _pinImageCache[key] = image;
+    return image;
+  }
+
+  Future<Uint8List> _buildPinImage(Color color, bool isSelected) async {
+    final double size = isSelected ? 42 : 30;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+
+    canvas.drawCircle(
+      Offset(size / 2, size / 2),
+      size / 2,
+      Paint()..color = Colors.white,
+    );
+    canvas.drawCircle(
+      Offset(size / 2, size / 2),
+      size / 2 - 2.5,
+      Paint()..color = color,
+    );
+    if (isSelected) {
+      canvas.drawCircle(
+        Offset(size / 2, size / 2),
+        size / 5,
+        Paint()..color = Colors.white,
+      );
+    }
+
+    final picture = recorder.endRecording();
+    final img = await picture.toImage(size.toInt(), size.toInt());
+    final data = await img.toByteData(format: ui.ImageByteFormat.png);
+    return data!.buffer.asUint8List();
   }
 
   Future<void> _onPosition(geo.Position position) async {
@@ -181,5 +300,17 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
           ),
       ],
     );
+  }
+}
+
+class _LandmarkClickListener extends OnPointAnnotationClickListener {
+  _LandmarkClickListener(this.onTap);
+
+  final void Function(PointAnnotation) onTap;
+
+  @override
+  bool onPointAnnotationClick(PointAnnotation annotation) {
+    onTap(annotation);
+    return true;
   }
 }

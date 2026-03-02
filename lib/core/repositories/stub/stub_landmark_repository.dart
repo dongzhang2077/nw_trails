@@ -14,6 +14,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '302 Royal Ave',
         description: 'A preserved 19th century home museum.',
         point: Point(coordinates: Position(-122.9094, 49.2064)),
+        imageUrl: 'https://picsum.photos/seed/nw-l1/1200/700',
+        rating: 4.7,
       ),
       Landmark(
         id: 'l2',
@@ -22,6 +24,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '777 Columbia St',
         description: 'Local history exhibitions and archives.',
         point: Point(coordinates: Position(-122.9079, 49.2060)),
+        imageUrl: 'https://picsum.photos/seed/nw-l2/1200/700',
+        rating: 4.5,
       ),
       Landmark(
         id: 'l3',
@@ -30,6 +34,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '511 Royal Ave',
         description: 'Historic municipal building in downtown core.',
         point: Point(coordinates: Position(-122.9119, 49.2070)),
+        imageUrl: 'https://picsum.photos/seed/nw-l3/1200/700',
+        rating: 4.3,
       ),
       Landmark(
         id: 'l4',
@@ -38,6 +44,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '1 Sixth St',
         description: 'Riverfront park with boardwalk views.',
         point: Point(coordinates: Position(-122.9119, 49.2046)),
+        imageUrl: 'https://picsum.photos/seed/nw-l4/1200/700',
+        rating: 4.8,
       ),
       Landmark(
         id: 'l5',
@@ -46,6 +54,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: 'First St',
         description: 'Large urban park with open lawns and trails.',
         point: Point(coordinates: Position(-122.9056, 49.2120)),
+        imageUrl: 'https://picsum.photos/seed/nw-l5/1200/700',
+        rating: 4.9,
       ),
       Landmark(
         id: 'l6',
@@ -54,6 +64,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: 'Fraser River Waterfront',
         description: 'Scenic walk route along the river.',
         point: Point(coordinates: Position(-122.9110, 49.2043)),
+        imageUrl: 'https://picsum.photos/seed/nw-l6/1200/700',
+        rating: 4.6,
       ),
       Landmark(
         id: 'l7',
@@ -62,6 +74,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '660 East Columbia St',
         description: 'Forest-style city park and recreation space.',
         point: Point(coordinates: Position(-122.8963, 49.2067)),
+        imageUrl: 'https://picsum.photos/seed/nw-l7/1200/700',
+        rating: 4.4,
       ),
       Landmark(
         id: 'l8',
@@ -70,6 +84,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '315 Queens Ave',
         description: 'Small downtown park near civic landmarks.',
         point: Point(coordinates: Position(-122.9099, 49.2076)),
+        imageUrl: 'https://picsum.photos/seed/nw-l8/1200/700',
+        rating: 4.2,
       ),
       Landmark(
         id: 'l9',
@@ -78,6 +94,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '810 Quayside Dr',
         description: 'Popular food market by the waterfront.',
         point: Point(coordinates: Position(-122.9121, 49.2028)),
+        imageUrl: 'https://picsum.photos/seed/nw-l9/1200/700',
+        rating: 4.7,
       ),
       Landmark(
         id: 'l10',
@@ -86,6 +104,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: 'Columbia St',
         description: 'Coffee shops and local student hangouts.',
         point: Point(coordinates: Position(-122.9090, 49.2060)),
+        imageUrl: 'https://picsum.photos/seed/nw-l10/1200/700',
+        rating: 4.1,
       ),
       Landmark(
         id: 'l11',
@@ -94,6 +114,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '1319 Third Ave',
         description: 'Local craft brewery with tasting room.',
         point: Point(coordinates: Position(-122.9020, 49.2093)),
+        imageUrl: 'https://picsum.photos/seed/nw-l11/1200/700',
+        rating: 4.6,
       ),
       Landmark(
         id: 'l12',
@@ -102,6 +124,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '777 Columbia St',
         description: 'Arts and culture venue with public events.',
         point: Point(coordinates: Position(-122.9079, 49.2058)),
+        imageUrl: 'https://picsum.photos/seed/nw-l12/1200/700',
+        rating: 4.5,
       ),
       Landmark(
         id: 'l13',
@@ -110,6 +134,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '735 Eighth Ave',
         description: 'Performance venue for concerts and shows.',
         point: Point(coordinates: Position(-122.9054, 49.2124)),
+        imageUrl: 'https://picsum.photos/seed/nw-l13/1200/700',
+        rating: 4.4,
       ),
       Landmark(
         id: 'l14',
@@ -118,6 +144,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: '700 Royal Ave',
         description: 'Campus hub for Douglas College students.',
         point: Point(coordinates: Position(-122.9115, 49.2071)),
+        imageUrl: 'https://picsum.photos/seed/nw-l14/1200/700',
+        rating: 4.0,
       ),
       Landmark(
         id: 'l15',
@@ -126,6 +154,8 @@ class StubLandmarkRepository implements LandmarkRepository {
         address: 'Gallery at Quayside',
         description: 'Historic paddlewheeler ship museum exhibit.',
         point: Point(coordinates: Position(-122.9100, 49.2030)),
+        imageUrl: 'https://picsum.photos/seed/nw-l15/1200/700',
+        rating: 4.3,
       ),
     ];
   }
