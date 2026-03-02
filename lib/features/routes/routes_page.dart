@@ -58,10 +58,7 @@ class _RouteCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
-                if (isActive)
-                  const Chip(
-                    label: Text('Active'),
-                  ),
+                if (isActive) const Chip(label: Text('Active')),
               ],
             ),
             const SizedBox(height: 6),

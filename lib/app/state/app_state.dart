@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:geolocator/geolocator.dart' as geo;
 import 'package:nw_trails/core/models/badge_progress.dart';
 import 'package:nw_trails/core/models/checkin_record.dart';
 import 'package:nw_trails/core/models/landmark.dart';
@@ -8,13 +9,9 @@ import 'package:nw_trails/core/repositories/checkin_repository.dart';
 import 'package:nw_trails/core/repositories/landmark_repository.dart';
 import 'package:nw_trails/core/repositories/route_repository.dart';
 import 'package:nw_trails/core/services/location_service.dart';
+import 'package:nw_trails/core/services/mock_geolocation_service.dart';
 
-enum CheckInStatus {
-  success,
-  permissionDenied,
-  outOfRange,
-  duplicate,
-}
+enum CheckInStatus { success, permissionDenied, outOfRange, duplicate }
 
 class CheckInAttemptResult {
   const CheckInAttemptResult({
@@ -34,10 +31,12 @@ class AppState extends ChangeNotifier {
     required CheckInRepository checkInRepository,
     required RouteRepository routeRepository,
     required LocationService locationService,
-  })  : _landmarkRepository = landmarkRepository,
-        _checkInRepository = checkInRepository,
-        _routeRepository = routeRepository,
-        _locationService = locationService {
+    required MockLocationService mockLocationService,
+  }) : _landmarkRepository = landmarkRepository,
+       _checkInRepository = checkInRepository,
+       _routeRepository = routeRepository,
+       _locationService = locationService,
+       _mockLocationService = mockLocationService {
     _landmarks = _landmarkRepository.getAll();
     _routes = _routeRepository.getAll();
     _refreshCheckInRecords();
@@ -47,6 +46,7 @@ class AppState extends ChangeNotifier {
   final CheckInRepository _checkInRepository;
   final RouteRepository _routeRepository;
   final LocationService _locationService;
+  final MockLocationService _mockLocationService;
 
   late final List<Landmark> _landmarks;
   late final List<RoutePlan> _routes;
@@ -56,6 +56,12 @@ class AppState extends ChangeNotifier {
   int _selectedTabIndex = 0;
   LandmarkCategory? _selectedCategory;
   String? _activeRouteId;
+
+  Stream<geo.Position> get locationStream => _mockLocationService.stream;
+  geo.Position? get lastKnownPosition => _mockLocationService.lastKnownPosition;
+
+  void injectLocation(double lat, double lng) =>
+      _mockLocationService.injectLocation(lat, lng);
 
   int get selectedTabIndex => _selectedTabIndex;
   LandmarkCategory? get selectedCategory => _selectedCategory;
@@ -88,9 +94,9 @@ class AppState extends ChangeNotifier {
       _checkInRecords.map((CheckInRecord item) => item.landmarkId).toSet();
 
   BadgeProgress get badgeProgress => BadgeProgress(
-        visitedCount: _visitedLandmarkIds.length,
-        totalLandmarks: _landmarks.length,
-      );
+    visitedCount: _visitedLandmarkIds.length,
+    totalLandmarks: _landmarks.length,
+  );
 
   int visitedCountForCategory(LandmarkCategory category) {
     final visitedIds = _visitedLandmarkIds;
@@ -169,8 +175,19 @@ class AppState extends ChangeNotifier {
       );
     }
 
-    final ProximityCheckResult proximity =
-        await _locationService.checkProximity(landmarkId: landmarkId);
+    final lastPosition = await _mockLocationService.stream.first;
+
+    final ProximityCheckResult proximity = await _locationService
+        .checkProximity(
+          userLatitude: lastPosition.latitude,
+          userLongitude: lastPosition.longitude,
+          landmarkLatitude: findLandmarkById(
+            landmarkId,
+          )!.point.coordinates.lat.toDouble(),
+          landmarkLongitude: findLandmarkById(
+            landmarkId,
+          )!.point.coordinates.lng.toDouble(),
+        );
 
     if (!proximity.permissionGranted) {
       return const CheckInAttemptResult(
@@ -188,11 +205,7 @@ class AppState extends ChangeNotifier {
     }
 
     _checkInRepository.add(
-      CheckInRecord(
-        landmarkId: landmarkId,
-        checkedInAt: now,
-        note: null,
-      ),
+      CheckInRecord(landmarkId: landmarkId, checkedInAt: now, note: null),
     );
     _refreshCheckInRecords();
     notifyListeners();

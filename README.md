@@ -33,6 +33,12 @@ flutter pub get
 flutter run
 ```
 
+Android-first run (recommended for this project):
+
+```bash
+flutter run -d android --dart-define=MAPBOX_ACCESS_TOKEN=<your_mapbox_public_token>
+```
+
 ## Team Collaboration Workflow
 
 ### 1) Repository Access

@@ -6,7 +6,10 @@ import 'package:nw_trails/core/constants/app_theme.dart';
 import 'package:nw_trails/core/repositories/stub/stub_checkin_repository.dart';
 import 'package:nw_trails/core/repositories/stub/stub_landmark_repository.dart';
 import 'package:nw_trails/core/repositories/stub/stub_route_repository.dart';
-import 'package:nw_trails/core/services/stub_location_service.dart';
+import 'package:nw_trails/core/services/device_geolocation_service.dart';
+import 'package:nw_trails/core/services/mock_geolocation_service.dart';
+import 'package:nw_trails/core/services/proximity_location_service.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class NWTrailsApp extends StatefulWidget {
   const NWTrailsApp({super.key});
@@ -20,8 +23,15 @@ class _NWTrailsAppState extends State<NWTrailsApp> {
     landmarkRepository: StubLandmarkRepository(),
     checkInRepository: StubCheckInRepository(),
     routeRepository: StubRouteRepository(),
-    locationService: StubLocationService(),
+    locationService: ProximityLocationService(),
+    mockLocationService: MockLocationService(DeviceGeolocationService()),
   );
+
+  @override
+  void initState() {
+    _requestLocationPermission(mounted, context);
+    super.initState();
+  }
 
   @override
   void dispose() {
@@ -40,5 +50,23 @@ class _NWTrailsAppState extends State<NWTrailsApp> {
         home: const MainShell(),
       ),
     );
+  }
+}
+
+Future<void> _requestLocationPermission(
+  bool mounted,
+  BuildContext context,
+) async {
+  final status = await Permission.locationWhenInUse.request();
+  if (status.isDenied || status.isPermanentlyDenied) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Location permission is required to show your position on the map.',
+          ),
+        ),
+      );
+    }
   }
 }
