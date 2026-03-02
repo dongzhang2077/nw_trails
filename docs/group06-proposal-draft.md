@@ -210,6 +210,20 @@ Unlike generic tourism apps (Google Maps, TripAdvisor) that serve all travelers,
 
 > Wireframes will be created in Figma by assigned members. Below is the detailed layout specification for each page.
 
+### Wireframe Screenshot Placement (for final `.docx`)
+
+Insert screenshots exported/imported from the HTML wireframes in this order:
+
+1. Figure 1 - `P1-HomeMap-Default` (`wireframes/html/p1_home_map_default.html`)
+2. Figure 2 - `P2-LandmarkDetail-Within50m` (`wireframes/html/p2_landmark_detail_within50m.html`)
+3. Figure 3 - `P3-AchievementProfile-Default` (`wireframes/html/p3_achievement_profile_default.html`)
+4. Figure 4 - `P4A/P4B Routes` (`wireframes/html/p4_routes_list_detail_default.html`)
+5. Figure 5 - `P5-CommunityLeaderboard-Default` (`wireframes/html/p5_community_leaderboard_default.html`)
+
+Optional supporting frame for IA clarity:
+
+- Figure S1 - `P1B-CheckInHistory-Default` (`wireframes/html/p1b_checkin_history_default.html`)
+
 ### Page 1: Home / Map Screen
 
 **Purpose**: Main screen showing the interactive map with all landmark pins.
@@ -462,9 +476,9 @@ Client (Flutter) --REST API--> Server (SpringBoot) ---> Database (MongoDB)
 
 ### Prototype Requirements Checklist
 
-- [ ] Minimum Viable UI: Basic screens with navigation
-- [ ] At least 3 core features (3 completed user stories)
-- [ ] Use local data storage or hardcoded data
+- [x] Minimum Viable UI: Basic screens with navigation
+- [x] At least 3 core features (3 completed user stories)
+- [x] Use local data storage or hardcoded data
 
 ### Confirmed Task Assignment (Execution Plan)
 
@@ -535,6 +549,23 @@ Client (Flutter) --REST API--> Server (SpringBoot) ---> Database (MongoDB)
 - [ ] Peer Evaluation table completed by all members
 - [ ] Wireframes (5 pages) included in proposal
 - [ ] Only ONE member (team lead) submits to Blackboard
+
+Current implementation status (internal tracking):
+
+- [x] Prototype code path validated (`flutter analyze`, `flutter test`, `flutter build apk --debug`, Android smoke run)
+- [x] Core route/check-in/awards logic validated by team testing
+
+---
+
+## Appendix C: Project Log (for final `group06-proposal.docx`)
+
+The assignment requires proposal + project log in one document. No fixed template is specified, so use a concise table and cite commit hashes/PRs as evidence.
+
+| Date | Member(s) | Work Completed | Evidence (commit/PR/test artifact) |
+|------|-----------|----------------|-------------------------------------|
+| YYYY-MM-DD | Name(s) | Short summary of delivered work | `commit-hash`, PR link, screenshot/video |
+| YYYY-MM-DD | Name(s) | Short summary of delivered work | `commit-hash`, PR link, screenshot/video |
+| YYYY-MM-DD | Name(s) | Short summary of delivered work | `commit-hash`, PR link, screenshot/video |
 
 ---
 
