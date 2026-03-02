@@ -98,6 +98,30 @@ class AppState extends ChangeNotifier {
     totalLandmarks: _landmarks.length,
   );
 
+  bool hasVisitedLandmark(String landmarkId) {
+    return _visitedLandmarkIds.contains(landmarkId);
+  }
+
+  int completedStopCountForRoute(RoutePlan route) {
+    final Set<String> visitedIds = _visitedLandmarkIds;
+    return route.landmarkIds.where(visitedIds.contains).length;
+  }
+
+  String? nextUnvisitedLandmarkIdForRoute(String routeId) {
+    final RoutePlan? route = findRouteById(routeId);
+    if (route == null) {
+      return null;
+    }
+
+    final Set<String> visitedIds = _visitedLandmarkIds;
+    for (final String landmarkId in route.landmarkIds) {
+      if (!visitedIds.contains(landmarkId)) {
+        return landmarkId;
+      }
+    }
+    return null;
+  }
+
   int visitedCountForCategory(LandmarkCategory category) {
     final visitedIds = _visitedLandmarkIds;
     return _landmarks.where((Landmark item) {
@@ -175,18 +199,29 @@ class AppState extends ChangeNotifier {
       );
     }
 
-    final lastPosition = await _mockLocationService.stream.first;
+    final Landmark? targetLandmark = findLandmarkById(landmarkId);
+    if (targetLandmark == null) {
+      return const CheckInAttemptResult(
+        status: CheckInStatus.outOfRange,
+        message: 'Landmark location is unavailable for check-in.',
+      );
+    }
+
+    final geo.Position? lastPosition = await _mockLocationService
+        .ensureCurrentPosition();
+    if (lastPosition == null) {
+      return const CheckInAttemptResult(
+        status: CheckInStatus.permissionDenied,
+        message: 'Location permission is required for check-in.',
+      );
+    }
 
     final ProximityCheckResult proximity = await _locationService
         .checkProximity(
           userLatitude: lastPosition.latitude,
           userLongitude: lastPosition.longitude,
-          landmarkLatitude: findLandmarkById(
-            landmarkId,
-          )!.point.coordinates.lat.toDouble(),
-          landmarkLongitude: findLandmarkById(
-            landmarkId,
-          )!.point.coordinates.lng.toDouble(),
+          landmarkLatitude: targetLandmark.point.coordinates.lat.toDouble(),
+          landmarkLongitude: targetLandmark.point.coordinates.lng.toDouble(),
         );
 
     if (!proximity.permissionGranted) {
@@ -208,12 +243,41 @@ class AppState extends ChangeNotifier {
       CheckInRecord(landmarkId: landmarkId, checkedInAt: now, note: null),
     );
     _refreshCheckInRecords();
+
+    final String routeMessage = _buildRouteProgressMessageAfterCheckIn(
+      landmarkId: landmarkId,
+    );
+
     notifyListeners();
 
     return CheckInAttemptResult(
       status: CheckInStatus.success,
-      message: 'Check-in saved. ${badgeProgress.nextBadgeHint}',
+      message: 'Check-in saved. ${badgeProgress.nextBadgeHint}$routeMessage',
     );
+  }
+
+  String _buildRouteProgressMessageAfterCheckIn({required String landmarkId}) {
+    final String? activeRouteId = _activeRouteId;
+    if (activeRouteId == null) {
+      return '';
+    }
+
+    final RoutePlan? route = findRouteById(activeRouteId);
+    if (route == null || !route.landmarkIds.contains(landmarkId)) {
+      return '';
+    }
+
+    final int completedStops = completedStopCountForRoute(route);
+    final String? nextStopId = nextUnvisitedLandmarkIdForRoute(route.id);
+
+    if (nextStopId == null) {
+      _activeRouteId = null;
+      return '\n\nRoute completed: ${route.name}.';
+    }
+
+    return '\n\nRoute progress: '
+        '$completedStops/${route.landmarkIds.length} stops. '
+        'Next stop: ${landmarkNameById(nextStopId)}.';
   }
 
   void _refreshCheckInRecords() {

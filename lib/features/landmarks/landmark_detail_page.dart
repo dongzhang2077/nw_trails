@@ -5,10 +5,7 @@ import 'package:nw_trails/core/constants/category_colors.dart';
 import 'package:nw_trails/core/models/landmark_category.dart';
 
 class LandmarkDetailPage extends StatefulWidget {
-  const LandmarkDetailPage({
-    required this.landmarkId,
-    super.key,
-  });
+  const LandmarkDetailPage({required this.landmarkId, super.key});
 
   final String landmarkId;
 
@@ -30,8 +27,9 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
       _isCheckingIn = true;
     });
 
-    final CheckInAttemptResult result =
-        await appState.attemptCheckIn(widget.landmarkId);
+    final CheckInAttemptResult result = await appState.attemptCheckIn(
+      widget.landmarkId,
+    );
 
     if (!mounted) {
       return;
@@ -41,6 +39,19 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
       _isCheckingIn = false;
     });
 
+    String? nextRouteStopName;
+    if (result.status == CheckInStatus.success) {
+      final String? activeRouteId = appState.activeRouteId;
+      if (activeRouteId != null) {
+        final String? nextStopId = appState.nextUnvisitedLandmarkIdForRoute(
+          activeRouteId,
+        );
+        if (nextStopId != null) {
+          nextRouteStopName = appState.landmarkNameById(nextStopId);
+        }
+      }
+    }
+
     final _PostCheckInAction? action = await _showCheckInResultDialog(
       context: context,
       result: result,
@@ -49,6 +60,7 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
       visitedCount: appState.badgeProgress.visitedCount,
       totalLandmarks: appState.badgeProgress.totalLandmarks,
       nextBadgeHint: appState.badgeProgress.nextBadgeHint,
+      nextRouteStopName: nextRouteStopName,
     );
 
     if (!mounted || action == null) {
@@ -66,6 +78,10 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
         appState.setSelectedTabIndex(2);
         Navigator.of(context).pop();
         return;
+      case _PostCheckInAction.goToNextStop:
+        appState.setSelectedTabIndex(0);
+        Navigator.of(context).pop();
+        return;
     }
   }
 
@@ -77,8 +93,10 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
     required int visitedCount,
     required int totalLandmarks,
     required String nextBadgeHint,
+    required String? nextRouteStopName,
   }) {
     final bool isSuccess = result.status == CheckInStatus.success;
+    final bool canGoToNextStop = isSuccess && nextRouteStopName != null;
 
     final String title = switch (result.status) {
       CheckInStatus.success => 'Checked in!',
@@ -130,23 +148,38 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
             if (!isSuccess)
               TextButton(
                 onPressed: () {
-                  Navigator.of(dialogContext).pop(_PostCheckInAction.viewHistory);
+                  Navigator.of(
+                    dialogContext,
+                  ).pop(_PostCheckInAction.viewHistory);
                 },
                 child: const Text('View history'),
               ),
             if (isSuccess)
               TextButton(
                 onPressed: () {
-                  Navigator.of(dialogContext).pop(_PostCheckInAction.viewHistory);
+                  Navigator.of(
+                    dialogContext,
+                  ).pop(_PostCheckInAction.viewHistory);
                 },
                 child: const Text('View history'),
               ),
             if (isSuccess)
               FilledButton(
                 onPressed: () {
-                  Navigator.of(dialogContext).pop(_PostCheckInAction.viewAwards);
+                  Navigator.of(
+                    dialogContext,
+                  ).pop(_PostCheckInAction.viewAwards);
                 },
                 child: const Text('View awards'),
+              ),
+            if (canGoToNextStop)
+              FilledButton.tonal(
+                onPressed: () {
+                  Navigator.of(
+                    dialogContext,
+                  ).pop(_PostCheckInAction.goToNextStop);
+                },
+                child: Text('Go to next stop: $nextRouteStopName'),
               ),
           ],
         );
@@ -212,8 +245,13 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
                   errorBuilder: (context, error, stackTrace) {
                     return Container(
                       alignment: Alignment.center,
-                      color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                      child: const Icon(Icons.image_not_supported_outlined, size: 34),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                      child: const Icon(
+                        Icons.image_not_supported_outlined,
+                        size: 34,
+                      ),
                     );
                   },
                 ),
@@ -236,10 +274,7 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
             ),
           ),
           const SizedBox(height: 12),
-          Text(
-            landmark.name,
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
+          Text(landmark.name, style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 6),
           Wrap(
             spacing: 8,
@@ -389,8 +424,4 @@ class _InfoMetric extends StatelessWidget {
   }
 }
 
-enum _PostCheckInAction {
-  stayHere,
-  viewHistory,
-  viewAwards,
-}
+enum _PostCheckInAction { stayHere, viewHistory, viewAwards, goToNextStop }
