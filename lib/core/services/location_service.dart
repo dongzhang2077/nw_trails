@@ -9,5 +9,10 @@ class ProximityCheckResult {
 }
 
 abstract class LocationService {
-  Future<ProximityCheckResult> checkProximity({required String landmarkId});
+  Future<ProximityCheckResult> checkProximity({
+    required double userLatitude,
+    required double userLongitude,
+    required double landmarkLatitude,
+    required double landmarkLongitude,
+  });
 }

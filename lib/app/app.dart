@@ -6,6 +6,9 @@ import 'package:nw_trails/core/constants/app_theme.dart';
 import 'package:nw_trails/core/repositories/stub/stub_checkin_repository.dart';
 import 'package:nw_trails/core/repositories/stub/stub_landmark_repository.dart';
 import 'package:nw_trails/core/repositories/stub/stub_route_repository.dart';
+import 'package:nw_trails/core/services/device_geolocation_service.dart';
+import 'package:nw_trails/core/services/mock_geolocation_service.dart';
+import 'package:nw_trails/core/services/proximity_location_service.dart';
 import 'package:nw_trails/core/services/stub_location_service.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -21,7 +24,8 @@ class _NWTrailsAppState extends State<NWTrailsApp> {
     landmarkRepository: StubLandmarkRepository(),
     checkInRepository: StubCheckInRepository(),
     routeRepository: StubRouteRepository(),
-    locationService: StubLocationService(),
+    locationService: ProximityLocationService(),
+    mockLocationService: MockLocationService(DeviceGeolocationService()),
   );
 
   @override

@@ -6,8 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_joystick/flutter_joystick.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
-import 'package:nw_trails/core/services/device_geolocation_service.dart';
-import 'package:nw_trails/core/services/mock_geolocation_service.dart';
+import 'package:nw_trails/app/state/app_scope.dart';
 
 class NwTrailsMap extends StatefulWidget {
   const NwTrailsMap({super.key});
@@ -17,10 +16,6 @@ class NwTrailsMap extends StatefulWidget {
 }
 
 class _NwTrailsMapState extends State<NwTrailsMap> {
-  final MockLocationService _geoService = MockLocationService(
-    DeviceGeolocationService(),
-  );
-
   MapboxMap? _mapboxMap;
   PointAnnotationManager? _annotationManager;
   PointAnnotation? _userMarker;
@@ -39,15 +34,16 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
   );
 
   @override
-  void initState() {
-    super.initState();
-    _locationSub = _geoService.stream.listen(_onPosition);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_locationSub == null) {
+      _locationSub = AppScope.of(context).locationStream.listen(_onPosition);
+    }
   }
 
   @override
   void dispose() {
     _locationSub?.cancel();
-    _geoService.dispose();
     super.dispose();
   }
 
@@ -116,7 +112,7 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
     const speed = 0.00002;
     _simLat = lat - details.y * speed;
     _simLng = lng + details.x * speed;
-    _geoService.injectLocation(_simLat!, _simLng!);
+    AppScope.of(context).injectLocation(_simLat!, _simLng!);
   }
 
   Future<Uint8List> _buildMarkerImage() async {
