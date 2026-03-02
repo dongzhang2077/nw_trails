@@ -1,13 +1,53 @@
 import 'package:flutter/material.dart';
 import 'package:nw_trails/app/state/app_scope.dart';
 import 'package:nw_trails/core/models/route_plan.dart';
+import 'package:nw_trails/features/routes/route_detail_page.dart';
 
-class RoutesPage extends StatelessWidget {
+class RoutesPage extends StatefulWidget {
   const RoutesPage({super.key});
+
+  @override
+  State<RoutesPage> createState() => _RoutesPageState();
+}
+
+class _RoutesPageState extends State<RoutesPage> {
+  static const List<String> _filters = <String>[
+    'All',
+    'Easy',
+    'Medium',
+    'Hard',
+  ];
+
+  String _selectedFilter = 'All';
+
+  Future<void> _openRouteDetail(RoutePlan route) async {
+    final appState = AppScope.of(context);
+    final bool? shouldFocusMap = await Navigator.of(context).push<bool>(
+      MaterialPageRoute<bool>(
+        builder: (_) => RouteDetailPage(routeId: route.id),
+      ),
+    );
+    if (!mounted || shouldFocusMap != true) {
+      return;
+    }
+    appState.setSelectedTabIndex(0);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Route ${route.name} is ready. Continue from the Map tab.',
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final appState = AppScope.of(context);
+    final List<RoutePlan> filteredRoutes = appState.routes
+        .where((RoutePlan r) {
+          return _selectedFilter == 'All' || r.difficulty == _selectedFilter;
+        })
+        .toList(growable: false);
 
     return SafeArea(
       child: ListView(
@@ -19,14 +59,49 @@ class RoutesPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Pick a route and continue on the map tab.',
+            'Choose a route, review the stop timeline, and start your journey.',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 12),
-          for (final RoutePlan route in appState.routes)
+          SizedBox(
+            height: 40,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: <Widget>[
+                for (final String filter in _filters)
+                  Padding(
+                    padding: const EdgeInsets.only(right: 8),
+                    child: ChoiceChip(
+                      label: Text(filter),
+                      selected: _selectedFilter == filter,
+                      onSelected: (_) {
+                        setState(() {
+                          _selectedFilter = filter;
+                        });
+                      },
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (filteredRoutes.isEmpty)
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Text(
+                  'No routes match the current difficulty filter.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ),
+            ),
+          for (final RoutePlan route in filteredRoutes)
             Padding(
               padding: const EdgeInsets.only(bottom: 10),
-              child: _RouteCard(route: route),
+              child: _RouteCard(
+                route: route,
+                onOpenDetail: () => _openRouteDetail(route),
+              ),
             ),
         ],
       ),
@@ -35,14 +110,20 @@ class RoutesPage extends StatelessWidget {
 }
 
 class _RouteCard extends StatelessWidget {
-  const _RouteCard({required this.route});
+  const _RouteCard({required this.route, required this.onOpenDetail});
 
   final RoutePlan route;
+  final VoidCallback onOpenDetail;
 
   @override
   Widget build(BuildContext context) {
     final appState = AppScope.of(context);
     final bool isActive = appState.activeRouteId == route.id;
+    final int completedStops = appState.completedStopCountForRoute(route);
+    final int totalStops = route.landmarkIds.length;
+    final String? nextStopId = appState.nextUnvisitedLandmarkIdForRoute(
+      route.id,
+    );
 
     return Card(
       child: Padding(
@@ -68,24 +149,20 @@ class _RouteCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Stops: '
-              '${route.landmarkIds.map(appState.landmarkNameById).join(', ')}',
+              'Progress: $completedStops/$totalStops stops',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              nextStopId == null
+                  ? 'All stops completed.'
+                  : 'Next stop: ${appState.landmarkNameById(nextStopId)}',
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 10),
             FilledButton.tonal(
-              onPressed: () {
-                appState.startRoute(route.id);
-                appState.setSelectedTabIndex(0);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(
-                      'Started ${route.name}. Continue from the Map tab.',
-                    ),
-                  ),
-                );
-              },
-              child: const Text('START THIS ROUTE'),
+              onPressed: onOpenDetail,
+              child: const Text('VIEW ROUTE DETAILS'),
             ),
           ],
         ),

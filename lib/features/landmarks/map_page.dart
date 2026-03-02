@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nw_trails/app/state/app_scope.dart';
+import 'package:nw_trails/app/state/app_state.dart';
 import 'package:nw_trails/core/constants/category_colors.dart';
 import 'package:nw_trails/core/models/landmark.dart';
 import 'package:nw_trails/core/models/landmark_category.dart';
@@ -15,6 +16,7 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   String? _selectedLandmarkId;
+  String? _lastAutoFocusKey;
   final GlobalKey _selectedPreviewKey = GlobalKey();
   final ScrollController _scrollController = ScrollController();
 
@@ -85,10 +87,63 @@ class _MapPageState extends State<MapPage> {
     return 120 + seed * 11 + realCheckInCount;
   }
 
+  void _focusNextRouteStopIfNeeded({
+    required AppState appState,
+    required String? routeId,
+    required String? nextStopId,
+  }) {
+    if (routeId == null || nextStopId == null) {
+      _lastAutoFocusKey = null;
+      return;
+    }
+
+    final String focusKey = '$routeId:$nextStopId';
+    if (_lastAutoFocusKey == focusKey) {
+      return;
+    }
+
+    final Landmark? nextLandmark = appState.findLandmarkById(nextStopId);
+    if (nextLandmark == null) {
+      return;
+    }
+
+    _lastAutoFocusKey = focusKey;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      appState.setCategory(null);
+      _selectLandmark(nextLandmark, fromExplore: true);
+    });
+  }
+
+  void _focusRouteLandmark(AppState appState, String landmarkId) {
+    final Landmark? landmark = appState.findLandmarkById(landmarkId);
+    if (landmark == null) {
+      return;
+    }
+    appState.setCategory(null);
+    _selectLandmark(landmark, fromExplore: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final appState = AppScope.of(context);
     final activeRoute = appState.activeRoute;
+    final int activeRouteCompletedStops = activeRoute == null
+        ? 0
+        : appState.completedStopCountForRoute(activeRoute);
+    final String? nextRouteStopId = activeRoute == null
+        ? null
+        : appState.nextUnvisitedLandmarkIdForRoute(activeRoute.id);
+    final String? nextRouteStopName = nextRouteStopId == null
+        ? null
+        : appState.landmarkNameById(nextRouteStopId);
+    _focusNextRouteStopIfNeeded(
+      appState: appState,
+      routeId: activeRoute?.id,
+      nextStopId: nextRouteStopId,
+    );
     final List<Landmark> landmarks = appState.filteredLandmarks;
 
     Landmark? selectedLandmark;
@@ -195,6 +250,7 @@ class _MapPageState extends State<MapPage> {
               child: Padding(
                 padding: const EdgeInsets.all(12),
                 child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                     Icon(
                       Icons.route,
@@ -202,9 +258,37 @@ class _MapPageState extends State<MapPage> {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        'Active route: ${activeRoute.name}',
-                        style: Theme.of(context).textTheme.bodyMedium,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Active route: ${activeRoute.name}',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            nextRouteStopName == null
+                                ? 'Route completed. Nice work!'
+                                : 'Next stop: $nextRouteStopName '
+                                      '($activeRouteCompletedStops/'
+                                      '${activeRoute.landmarkIds.length})',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
+                          if (nextRouteStopId != null)
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: TextButton.icon(
+                                onPressed: () {
+                                  _focusRouteLandmark(
+                                    appState,
+                                    nextRouteStopId,
+                                  );
+                                },
+                                icon: const Icon(Icons.my_location),
+                                label: const Text('FOCUS NEXT STOP'),
+                              ),
+                            ),
+                        ],
                       ),
                     ),
                   ],
