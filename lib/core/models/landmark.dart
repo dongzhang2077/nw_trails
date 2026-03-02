@@ -7,6 +7,8 @@ class Landmark {
     required this.category,
     required this.address,
     required this.description,
+    required this.imageUrl,
+    required this.rating,
   });
 
   final String id;
@@ -14,4 +16,6 @@ class Landmark {
   final LandmarkCategory category;
   final String address;
   final String description;
+  final String imageUrl;
+  final double rating;
 }
