@@ -10,19 +10,19 @@
 
 ## i. Cover Page
 
-| | |
-|---|---|
-| **App Name** | NW Trails |
-| **Group Number** | Group 06 |
-| **Course** | CSIS 4280 Special Topics in Emerging Technology |
-| **Term** | Winter 2026 |
+|                  |                                                 |
+| ---------------- | ----------------------------------------------- |
+| **App Name**     | NW Trails                                       |
+| **Group Number** | Group 06                                        |
+| **Course**       | CSIS 4280 Special Topics in Emerging Technology |
+| **Term**         | Winter 2026                                     |
 
-| Name | Student ID | Role |
-|------|-----------|------|
-| Dong Zhang | [Student ID] | Team Lead |
-| Diego Romero-Lovo De la Flor | [Student ID] | Member |
-| Zhi Kang | [Student ID] | Member |
-| Menghua Wang | [Student ID] | Member |
+| Name                         | Student ID | Role      |
+| ---------------------------- | ---------- | --------- |
+| Dong Zhang                   | 300403848  | Team Lead |
+| Diego Romero-Lovo De la Flor | 300398786  | Member    |
+| Zhi Kang                     | 300403869  | Member    |
+| Menghua Wang                 | 300397100  | Member    |
 
 > **TODO**: Each member fill in your Student ID before final submission.
 
@@ -59,12 +59,12 @@ Pokemon GO uses "PokeStops" and "Gyms" tied to real-world landmarks. Users must 
 
 **How NW Trails replicates and improves it:**
 
-| Aspect | Pokemon GO | NW Trails |
-|--------|-----------|-----------|
-| Content | Virtual creatures at generic locations | Curated real landmarks with educational descriptions |
-| Check-in | Spin a disc (game mechanic) | One-tap check-in with optional photo upload |
-| Verification | GPS proximity | GPS proximity (within 50m) |
-| Value | Collect game items | Learn about New Westminster's history, food, and culture |
+| Aspect       | Pokemon GO                             | NW Trails                                                |
+| ------------ | -------------------------------------- | -------------------------------------------------------- |
+| Content      | Virtual creatures at generic locations | Curated real landmarks with educational descriptions     |
+| Check-in     | Spin a disc (game mechanic)            | One-tap check-in with optional photo upload              |
+| Verification | GPS proximity                          | GPS proximity (within 50m)                               |
+| Value        | Collect game items                     | Learn about New Westminster's history, food, and culture |
 
 **Our improvement:** While Pokemon GO's PokeStops are often placed at arbitrary locations with little context, NW Trails curates each landmark with meaningful descriptions, practical information (opening hours, tips from students), and category tags. The goal shifts from collecting virtual items to gaining genuine knowledge about the city.
 
@@ -75,12 +75,12 @@ Pokemon GO features an extensive medal system. Players earn medals for catching 
 
 **How NW Trails replicates and improves it:**
 
-| Aspect | Pokemon GO | NW Trails |
-|--------|-----------|-----------|
-| Tiers | Bronze, Silver, Gold | Bronze (5), Silver (10), Gold (15) |
+| Aspect     | Pokemon GO                        | NW Trails                                         |
+| ---------- | --------------------------------- | ------------------------------------------------- |
+| Tiers      | Bronze, Silver, Gold              | Bronze (5), Silver (10), Gold (15)                |
 | Categories | Pokemon types (Fire, Water, etc.) | Landmark themes (Historic, Nature, Food, Culture) |
-| Scope | 100+ medals, overwhelming | Focused set of achievable badges |
-| Motivation | Completionist grind | Realistic weekend goals |
+| Scope      | 100+ medals, overwhelming         | Focused set of achievable badges                  |
+| Motivation | Completionist grind               | Realistic weekend goals                           |
 
 **Our improvement:** Pokemon GO's medal system is vast and can feel unattainable for casual players. NW Trails intentionally limits the scope to 15 landmarks and a focused set of badges, making 100% completion a realistic and rewarding goal achievable within a semester. The themed badges (e.g., "History Buff" for visiting all historic sites) provide clear, short-term objectives that maintain motivation.
 
@@ -91,22 +91,22 @@ Pokemon GO introduced "Routes" in 2023, allowing players to follow community-cre
 
 **How NW Trails replicates and improves it:**
 
-| Aspect | Pokemon GO | NW Trails |
-|--------|-----------|-----------|
-| Route creation | User-generated, inconsistent quality | Professionally curated by the development team |
-| Information | Minimal (just a path line) | Distance, duration, difficulty, landmark descriptions |
-| Purpose | Catch special Pokemon | Discover the city with structured walking tours |
-| Navigation | Follow a line on map | Step-by-step directions between landmarks |
+| Aspect         | Pokemon GO                           | NW Trails                                             |
+| -------------- | ------------------------------------ | ----------------------------------------------------- |
+| Route creation | User-generated, inconsistent quality | Professionally curated by the development team        |
+| Information    | Minimal (just a path line)           | Distance, duration, difficulty, landmark descriptions |
+| Purpose        | Catch special Pokemon                | Discover the city with structured walking tours       |
+| Navigation     | Follow a line on map                 | Step-by-step directions between landmarks             |
 
 **Our improvement:** NW Trails routes are thoughtfully designed walking tours with practical metadata (distance, time, difficulty). Each route tells a story — the "Historic Downtown Walk" guides users through New Westminster's heritage sites in chronological order, while the "Waterfront Trail" follows the scenic Fraser River path. This transforms a game mechanic into a genuinely useful city guide.
 
 ### Summary
 
-| Core Feature | Pokemon GO | NW Trails Improvement |
-|-------------|-----------|----------------------|
-| Location check-in | Generic PokeStops | Curated landmarks with educational content |
-| Achievement system | Overwhelming 100+ medals | Focused, achievable badge collection |
-| Guided routes | User-generated, game-focused | Curated walking tours with practical info |
+| Core Feature       | Pokemon GO                   | NW Trails Improvement                      |
+| ------------------ | ---------------------------- | ------------------------------------------ |
+| Location check-in  | Generic PokeStops            | Curated landmarks with educational content |
+| Achievement system | Overwhelming 100+ medals     | Focused, achievable badge collection       |
+| Guided routes      | User-generated, game-focused | Curated walking tours with practical info  |
 
 NW Trails takes proven engagement mechanics from the world's most successful location-based game and reimagines them for a focused, practical purpose: helping Douglas College students discover and connect with New Westminster.
 
@@ -134,13 +134,13 @@ Even students who have lived in New Westminster for a while may not have explore
 
 ### User Needs
 
-| User Need | How NW Trails Addresses It |
-|-----------|---------------------------|
-| "I don't know what's around campus" | Interactive map with 15 curated landmarks, each with descriptions and categories |
-| "I want something fun to do on weekends" | Guided walking routes with varying difficulty, gamified with badge rewards |
-| "I want to feel connected to this city" | Educational landmark content about New Westminster's history, food, and culture |
-| "I want to do this with friends" | Leaderboard, social sharing, community stats that encourage group exploration |
-| "I don't have a lot of time" | Short routes (30-70 min), one-tap check-in (3 seconds), progress saves automatically |
+| User Need                                | How NW Trails Addresses It                                                           |
+| ---------------------------------------- | ------------------------------------------------------------------------------------ |
+| "I don't know what's around campus"      | Interactive map with 15 curated landmarks, each with descriptions and categories     |
+| "I want something fun to do on weekends" | Guided walking routes with varying difficulty, gamified with badge rewards           |
+| "I want to feel connected to this city"  | Educational landmark content about New Westminster's history, food, and culture      |
+| "I want to do this with friends"         | Leaderboard, social sharing, community stats that encourage group exploration        |
+| "I don't have a lot of time"             | Short routes (30-70 min), one-tap check-in (3 seconds), progress saves automatically |
 
 ### Why They Would Use NW Trails
 
@@ -393,34 +393,34 @@ Unlike generic tourism apps (Google Maps, TripAdvisor) that serve all travelers,
 
 ### Wireframe Design Guidelines
 
-| Element | Specification |
-|---------|--------------|
-| Primary Color | Deep Teal `#0D7377` |
-| Accent Color | Warm Orange `#FF6B35` (CTA buttons, check-in highlights) |
-| Background | Light Gray `#F5F5F5` |
-| Cards | White `#FFFFFF` with subtle shadow, 12px border radius |
+| Element         | Specification                                                                                         |
+| --------------- | ----------------------------------------------------------------------------------------------------- |
+| Primary Color   | Deep Teal `#0D7377`                                                                                   |
+| Accent Color    | Warm Orange `#FF6B35` (CTA buttons, check-in highlights)                                              |
+| Background      | Light Gray `#F5F5F5`                                                                                  |
+| Cards           | White `#FFFFFF` with subtle shadow, 12px border radius                                                |
 | Category Colors | Historic: Brown `#8B6914`, Nature: Green `#2E7D32`, Food: Orange `#E65100`, Culture: Purple `#6A1B9A` |
-| Typography | Titles: Bold 18-20sp, Body: Regular 14-16sp, Caption: 12sp |
-| Icons | Material Icons, rounded style |
-| Spacing | 16px standard padding, 8px between cards |
+| Typography      | Titles: Bold 18-20sp, Body: Regular 14-16sp, Caption: 12sp                                            |
+| Icons           | Material Icons, rounded style                                                                         |
+| Spacing         | 16px standard padding, 8px between cards                                                              |
 
 ---
 
 ### Wireframe Assignment
 
-| Page | Assigned To | Description |
-|------|------------|-------------|
-| Page 1: Home / Map Screen | Dong Zhang (Team Lead) | Main map with landmark pins and category filters |
-| Page 2: Landmark Detail + Check-in | Dong Zhang (Team Lead) | Landmark info, photos, check-in flow |
-| Page 3: Achievements & Profile | Dong Zhang (Team Lead) | Badges, progress, check-in history |
-| Page 4: Routes Browser + Detail | Dong Zhang | Route list, route detail with timeline |
-| Page 5: Community Leaderboard | Dong Zhang (Team Lead) | Rankings, stats, trending landmarks |
+| Page                               | Assigned To            | Description                                      |
+| ---------------------------------- | ---------------------- | ------------------------------------------------ |
+| Page 1: Home / Map Screen          | Dong Zhang (Team Lead) | Main map with landmark pins and category filters |
+| Page 2: Landmark Detail + Check-in | Dong Zhang (Team Lead) | Landmark info, photos, check-in flow             |
+| Page 3: Achievements & Profile     | Dong Zhang (Team Lead) | Badges, progress, check-in history               |
+| Page 4: Routes Browser + Detail    | Dong Zhang             | Route list, route detail with timeline           |
+| Page 5: Community Leaderboard      | Dong Zhang (Team Lead) | Rankings, stats, trending landmarks              |
 
 #### Interaction Prototyping Assignment
 
-| Task | Assigned To | Description |
-|------|------------|-------------|
-| Figma Prototype Interaction Linking | Zhi Kang | Configure page-to-page click-through flow and validate the main sequence (Map -> Detail -> Check-in Success -> Profile, plus Routes flow) |
+| Task                                | Assigned To | Description                                                                                                                               |
+| ----------------------------------- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Figma Prototype Interaction Linking | Zhi Kang    | Configure page-to-page click-through flow and validate the main sequence (Map -> Detail -> Check-in Success -> Profile, plus Routes flow) |
 
 > Wireframes are created in **Figma** with a low-to-mid fidelity focus on UX flow clarity, navigation logic, and component consistency (visual polish is secondary in this phase).
 
@@ -431,17 +431,18 @@ Unlike generic tourism apps (Google Maps, TripAdvisor) that serve all travelers,
 > **TODO**: Each member completes this table before final submission.
 
 **Rubric:**
+
 - **1 Point**: No or very little contribution; cannot deliver artifacts or largely miss deadlines; no passion.
 - **2 Points**: Little contribution with no negative effect; sometimes misses deadlines; mainly follows others.
 - **3 Points**: Fairly large and positive contribution; handles most tasks and delivers on time.
 - **4 Points**: Large and positive contribution; helps others tackle problems; proactive and passionate.
 
 | Evaluator \ Evaluatee | Diego Romero-Lovo De la Flor | Dong Zhang | Zhi Kang | Menghua Wang |
-|------------------------|------------------------------|------------|----------|--------------|
-| **Diego** | — | [ ] | [ ] | [ ] |
-| **Dong** | [ ] | — | [ ] | [ ] |
-| **Zhi** | [ ] | [ ] | — | [ ] |
-| **Menghua** | [ ] | [ ] | [ ] | — |
+| --------------------- | ---------------------------- | ---------- | -------- | ------------ |
+| **Diego**             | —                            | [ ]        | [ ]      | [ ]          |
+| **Dong**              | [ ]                          | —          | [ ]      | [ ]          |
+| **Zhi**               | [ ]                          | [ ]        | —        | [ ]          |
+| **Menghua**           | [ ]                          | [ ]        | [ ]      | —            |
 
 ---
 
@@ -467,21 +468,21 @@ Client (Flutter) --REST API--> Server (SpringBoot) ---> Database (MongoDB)
 
 ### Confirmed Task Assignment (Execution Plan)
 
-| Member | Module | Must-Have Feature | Key Screens | Deliverables |
-|--------|--------|-------------------|-------------|--------------|
-| **Dong Zhang (Team Lead)** | App Shell, Routes, Integration | Must-Have 4 + cross-module integration | App shell, Routes list/detail, shared navigation | Bottom navigation architecture, routes workflow, module integration, final merge and release packaging |
-| **Diego Romero-Lovo De la Flor** | Map & Landmark Discovery | Must-Have 1 | Home/Map Screen, Landmark Detail | Landmark data model, category filter chips, pin/preview interaction, detail page layout |
-| **Zhi Kang** | Check-in + Figma Prototype Linking | Must-Have 2 | Landmark Detail Check-in, Check-in History, Figma prototype links | Distance verification stub (within 50m simulation), check-in action and history list, Figma click-through flow wiring |
-| **Menghua Wang** | Achievement & Profile | Must-Have 3 | Profile page, Badge display | Bronze/Silver/Gold progress logic, themed badge states, profile progress bar and history section |
+| Member                           | Module                             | Must-Have Feature                      | Key Screens                                                       | Deliverables                                                                                                          |
+| -------------------------------- | ---------------------------------- | -------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| **Dong Zhang (Team Lead)**       | App Shell, Routes, Integration     | Must-Have 4 + cross-module integration | App shell, Routes list/detail, shared navigation                  | Bottom navigation architecture, routes workflow, module integration, final merge and release packaging                |
+| **Diego Romero-Lovo De la Flor** | Map & Landmark Discovery           | Must-Have 1                            | Home/Map Screen, Landmark Detail                                  | Landmark data model, category filter chips, pin/preview interaction, detail page layout                               |
+| **Zhi Kang**                     | Check-in + Figma Prototype Linking | Must-Have 2                            | Landmark Detail Check-in, Check-in History, Figma prototype links | Distance verification stub (within 50m simulation), check-in action and history list, Figma click-through flow wiring |
+| **Menghua Wang**                 | Achievement & Profile              | Must-Have 3                            | Profile page, Badge display                                       | Bronze/Silver/Gold progress logic, themed badge states, profile progress bar and history section                      |
 
 ### Milestone and Handoff Schedule
 
-| Timebox | Owner(s) | Target Output |
-|---------|----------|---------------|
-| Mar 1 night | Dong + Zhi | Complete wireframe frames and configure Figma interaction linking for primary user flow |
-| Mar 2 morning | Diego, Zhi, Menghua | Module code handoff to team lead and basic self-test completed |
-| Mar 2 noon | Dong + all | Integration test pass: navigation + 3 core features demo flow |
-| Mar 2 before 17:00 | Dong (submitter) | Final package: `group06-proposal.docx` + `group06-app.zip` -> `group06-project01.zip` |
+| Timebox            | Owner(s)            | Target Output                                                                           |
+| ------------------ | ------------------- | --------------------------------------------------------------------------------------- |
+| Mar 1 night        | Dong + Zhi          | Complete wireframe frames and configure Figma interaction linking for primary user flow |
+| Mar 2 morning      | Diego, Zhi, Menghua | Module code handoff to team lead and basic self-test completed                          |
+| Mar 2 noon         | Dong + all          | Integration test pass: navigation + 3 core features demo flow                           |
+| Mar 2 before 17:00 | Dong (submitter)    | Final package: `group06-proposal.docx` + `group06-app.zip` -> `group06-project01.zip`   |
 
 ### Shared Components (to be built collaboratively)
 
@@ -493,35 +494,35 @@ Client (Flutter) --REST API--> Server (SpringBoot) ---> Database (MongoDB)
 
 ### 15 Curated Landmarks (Reference Data)
 
-| # | Name | Category | Coordinates (approx.) |
-|---|------|----------|----------------------|
-| 1 | Irving House | Historic | 49.2077, -122.9128 |
-| 2 | New Westminster Museum | Historic | 49.2043, -122.9108 |
-| 3 | City Hall | Historic | 49.2044, -122.9070 |
-| 4 | Westminster Pier Park | Historic | 49.2002, -122.9088 |
-| 5 | Queens Park | Nature | 49.2134, -122.9026 |
-| 6 | Fraser River Trail | Nature | 49.1980, -122.9150 |
-| 7 | Hume Park | Nature | 49.2170, -122.8920 |
-| 8 | Tipperary Park | Nature | 49.2060, -122.9070 |
-| 9 | River Market | Food | 49.2005, -122.9095 |
-| 10 | Columbia Street Cafes | Food | 49.2045, -122.9100 |
-| 11 | Steel & Oak Brewing | Food | 49.2010, -122.9055 |
-| 12 | Anvil Centre | Culture | 49.2015, -122.9105 |
-| 13 | Massey Theatre | Culture | 49.2132, -122.9030 |
-| 14 | Douglas College (New West) | Culture | 49.2048, -122.9120 |
-| 15 | Samson V Maritime Museum | Culture | 49.2000, -122.9090 |
+| #   | Name                       | Category | Coordinates (approx.) |
+| --- | -------------------------- | -------- | --------------------- |
+| 1   | Irving House               | Historic | 49.2077, -122.9128    |
+| 2   | New Westminster Museum     | Historic | 49.2043, -122.9108    |
+| 3   | City Hall                  | Historic | 49.2044, -122.9070    |
+| 4   | Westminster Pier Park      | Historic | 49.2002, -122.9088    |
+| 5   | Queens Park                | Nature   | 49.2134, -122.9026    |
+| 6   | Fraser River Trail         | Nature   | 49.1980, -122.9150    |
+| 7   | Hume Park                  | Nature   | 49.2170, -122.8920    |
+| 8   | Tipperary Park             | Nature   | 49.2060, -122.9070    |
+| 9   | River Market               | Food     | 49.2005, -122.9095    |
+| 10  | Columbia Street Cafes      | Food     | 49.2045, -122.9100    |
+| 11  | Steel & Oak Brewing        | Food     | 49.2010, -122.9055    |
+| 12  | Anvil Centre               | Culture  | 49.2015, -122.9105    |
+| 13  | Massey Theatre             | Culture  | 49.2132, -122.9030    |
+| 14  | Douglas College (New West) | Culture  | 49.2048, -122.9120    |
+| 15  | Samson V Maritime Museum   | Culture  | 49.2000, -122.9090    |
 
 > **Note**: Coordinates are approximate. Verify with Google Maps before implementation.
 
 ### Pre-Set Walking Routes (Reference Data)
 
-| Route Name | Difficulty | Distance | Duration | Landmarks |
-|-----------|-----------|----------|----------|-----------|
-| Historic Downtown Walk | Easy | 2.5 km | 45 min | #1, #2, #3, #4, #12 |
-| Waterfront Trail | Medium | 3.8 km | 70 min | #4, #6, #9, #11, #15, #12 |
-| Food & Market Tour | Easy | 1.8 km | 30 min | #9, #10, #11, #14 |
-| Queens Park & Beyond | Medium | 3.2 km | 55 min | #5, #7, #8, #13 |
-| Complete New West | Hard | 6.5 km | 120 min | All 15 landmarks |
+| Route Name             | Difficulty | Distance | Duration | Landmarks                 |
+| ---------------------- | ---------- | -------- | -------- | ------------------------- |
+| Historic Downtown Walk | Easy       | 2.5 km   | 45 min   | #1, #2, #3, #4, #12       |
+| Waterfront Trail       | Medium     | 3.8 km   | 70 min   | #4, #6, #9, #11, #15, #12 |
+| Food & Market Tour     | Easy       | 1.8 km   | 30 min   | #9, #10, #11, #14         |
+| Queens Park & Beyond   | Medium     | 3.2 km   | 55 min   | #5, #7, #8, #13           |
+| Complete New West      | Hard       | 6.5 km   | 120 min  | All 15 landmarks          |
 
 ---
 
@@ -537,4 +538,4 @@ Client (Flutter) --REST API--> Server (SpringBoot) ---> Database (MongoDB)
 
 ---
 
-*Document prepared for Group 06 internal coordination. Convert to `.docx` for final submission.*
+_Document prepared for Group 06 internal coordination. Convert to `.docx` for final submission._

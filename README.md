@@ -39,6 +39,76 @@ Android-first run (recommended for this project):
 flutter run -d android --dart-define=MAPBOX_ACCESS_TOKEN=<your_mapbox_public_token>
 ```
 
+## Token Policy (For Team Testing)
+
+- A Mapbox public token (`pk.*`) can be shared for class testing.
+- Never share a secret token (`sk.*`).
+- For safer sharing, set token restrictions in Mapbox dashboard (allowed apps/URLs/scopes) and rotate the token after grading.
+
+## Standard Test Runbook (Android)
+
+### 1) Prerequisites
+
+```bash
+flutter pub get
+flutter analyze
+flutter test
+flutter build apk --debug
+```
+
+### 2) Start the app with token
+
+Use your own local token file path (do not hardcode another teammate's local path).
+Put your own token in the txt file.
+
+PowerShell example:
+
+```powershell
+$token = (Get-Content '<path-to-your-token-file.txt>' -Raw).Trim()
+flutter devices
+flutter run -d <device-id> --dart-define=MAPBOX_ACCESS_TOKEN=$token
+```
+
+device id example: emulator-5554
+
+### 3) Historic Downtown Walk route test (emulator)
+
+Keep `flutter run` in one terminal. Open another terminal for ADB location injection.
+
+If `adb` is already in `PATH`:
+
+```powershell
+adb -s <device-id> emu geo fix -122.9094 49.2064
+adb -s <device-id> emu geo fix -122.9079 49.2060
+adb -s <device-id> emu geo fix -122.9119 49.2070
+adb -s <device-id> emu geo fix -122.9119 49.2046
+adb -s <device-id> emu geo fix -122.9079 49.2058
+```
+
+If `adb` is not in `PATH`, use your local SDK path:
+
+```powershell
+<ANDROID_SDK_ROOT>\platform-tools\adb.exe -s <device-id> emu geo fix -122.9094 49.2064
+<ANDROID_SDK_ROOT>\platform-tools\adb.exe -s <device-id> emu geo fix -122.9079 49.2060
+<ANDROID_SDK_ROOT>\platform-tools\adb.exe -s <device-id> emu geo fix -122.9119 49.2070
+<ANDROID_SDK_ROOT>\platform-tools\adb.exe -s <device-id> emu geo fix -122.9119 49.2046
+<ANDROID_SDK_ROOT>\platform-tools\adb.exe -s <device-id> emu geo fix -122.9079 49.2058
+```
+
+```
+<ANDROID_SDK_ROOT> example:
+C:\Users\<your_username>\AppData\Local\Android\Sdk\
+```
+
+### 4) Expected behavior checklist
+
+- Start route: `Historic Downtown Walk` (`l1 -> l2 -> l3 -> l4 -> l12`)
+- Check-in succeeds when near the current stop
+- `Next stop` advances only after a successful check-in
+- `Go to next stop` returns to Map and focuses the next route stop
+- Final stop check-in completes the route and clears active route
+- Duplicate same-day check-in on same landmark is blocked (expected)
+
 ## Team Collaboration Workflow
 
 ### 1) Repository Access
