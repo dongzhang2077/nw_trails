@@ -43,6 +43,9 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
   bool _creatingMarker = false;
   double? _simLat;
   double? _simLng;
+  String _currentStyleUri = MapboxStyles.MAPBOX_STREETS;
+  String? _mapLoadErrorMessage;
+  bool _styleFallbackAttempted = false;
 
   final CameraOptions _initialCamera = CameraOptions(
     center: Point(coordinates: Position(-122.9110, 49.2057)),
@@ -76,17 +79,57 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
 
   Future<void> _onMapCreated(MapboxMap mapboxMap) async {
     _mapboxMap = mapboxMap;
-    _annotationManager = await mapboxMap.annotations
+  }
+
+  void _onStyleLoaded(StyleLoadedEventData _) {
+    _prepareAnnotationsForStyle();
+  }
+
+  Future<void> _prepareAnnotationsForStyle() async {
+    final MapboxMap? mapboxMap = _mapboxMap;
+    if (mapboxMap == null) {
+      return;
+    }
+
+    final PointAnnotationManager annotationManager = await mapboxMap.annotations
         .createPointAnnotationManager();
-    _annotationManager!.addOnPointAnnotationClickListener(
+    annotationManager.addOnPointAnnotationClickListener(
       _LandmarkClickListener(_onAnnotationTap),
     );
+    _annotationManager = annotationManager;
+    _landmarkAnnotations.clear();
+    _annotationIdToLandmarkId.clear();
+    _userMarker = null;
 
     await _createLandmarkAnnotations();
 
-    final seed = _pendingPosition;
+    final geo.Position? seed = _pendingPosition;
     _pendingPosition = null;
-    if (seed != null) await _onPosition(seed);
+    if (seed != null) {
+      await _onPosition(seed);
+    }
+
+    if (!mounted || _mapLoadErrorMessage == null) {
+      return;
+    }
+    setState(() {
+      _mapLoadErrorMessage = null;
+    });
+  }
+
+  void _onMapLoadError(MapLoadingErrorEventData event) {
+    if (event.type == MapLoadErrorType.STYLE && !_styleFallbackAttempted) {
+      _styleFallbackAttempted = true;
+      _currentStyleUri = MapboxStyles.STANDARD;
+      _mapboxMap?.loadStyleURI(_currentStyleUri);
+    }
+
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _mapLoadErrorMessage = event.message;
+    });
   }
 
   void _onAnnotationTap(PointAnnotation annotation) {
@@ -296,7 +339,13 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
 
     return Stack(
       children: [
-        MapWidget(cameraOptions: _initialCamera, onMapCreated: _onMapCreated),
+        MapWidget(
+          cameraOptions: _initialCamera,
+          styleUri: _currentStyleUri,
+          onMapCreated: _onMapCreated,
+          onStyleLoadedListener: _onStyleLoaded,
+          onMapLoadErrorListener: _onMapLoadError,
+        ),
         Positioned(
           top: 12,
           right: 12,
@@ -331,6 +380,22 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
               child: Joystick(
                 mode: JoystickMode.all,
                 listener: _onJoystickMove,
+              ),
+            ),
+          ),
+        if (_mapLoadErrorMessage != null)
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 12,
+            child: Card(
+              color: Colors.black.withOpacity(0.68),
+              child: Padding(
+                padding: const EdgeInsets.all(10),
+                child: Text(
+                  'Map style warning: $_mapLoadErrorMessage',
+                  style: const TextStyle(color: Colors.white),
+                ),
               ),
             ),
           ),

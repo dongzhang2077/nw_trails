@@ -190,10 +190,17 @@ class _MapPageState extends State<MapPage> {
                 backgroundColor: Theme.of(
                   context,
                 ).colorScheme.primary.withOpacity(0.1),
-                child: Icon(
-                  Icons.person,
-                  size: 18,
-                  color: Theme.of(context).colorScheme.primary,
+                child: IconButton(
+                  padding: EdgeInsets.zero,
+                  tooltip: 'Profile',
+                  onPressed: () {
+                    appState.setSelectedTabIndex(2);
+                  },
+                  icon: Icon(
+                    Icons.person,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
                 ),
               ),
             ],
