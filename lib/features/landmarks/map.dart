@@ -98,6 +98,16 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
     }
   }
 
+  Future<void> _zoom(double delta) async {
+    final map = _mapboxMap;
+    if (map == null) return;
+    final state = await map.getCameraState();
+    await map.easeTo(
+      CameraOptions(zoom: state.zoom + delta),
+      MapAnimationOptions(duration: 200),
+    );
+  }
+
   void _onJoystickMove(StickDragDetails details) {
     final lat = _simLat;
     final lng = _simLng;
@@ -139,11 +149,26 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
         Positioned(
           top: 12,
           right: 12,
-          child: FloatingActionButton.small(
-            heroTag: 'joystick_toggle',
-            onPressed: () =>
-                setState(() => _joystickVisible = !_joystickVisible),
-            child: Icon(_joystickVisible ? Icons.close : Icons.gamepad),
+          child: Column(
+            spacing: 8,
+            children: [
+              FloatingActionButton.small(
+                heroTag: 'joystick_toggle',
+                onPressed: () =>
+                    setState(() => _joystickVisible = !_joystickVisible),
+                child: Icon(_joystickVisible ? Icons.close : Icons.gamepad),
+              ),
+              FloatingActionButton.small(
+                heroTag: 'zoom_in',
+                onPressed: () => _zoom(1),
+                child: const Icon(Icons.add),
+              ),
+              FloatingActionButton.small(
+                heroTag: 'zoom_out',
+                onPressed: () => _zoom(-1),
+                child: const Icon(Icons.remove),
+              ),
+            ],
           ),
         ),
         if (_joystickVisible)
