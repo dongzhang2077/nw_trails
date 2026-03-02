@@ -3,6 +3,7 @@ import 'package:nw_trails/app/state/app_scope.dart';
 import 'package:nw_trails/core/models/landmark.dart';
 import 'package:nw_trails/core/models/landmark_category.dart';
 import 'package:nw_trails/features/landmarks/landmark_detail_page.dart';
+import 'package:nw_trails/features/landmarks/map.dart';
 
 class MapPage extends StatelessWidget {
   const MapPage({super.key});
@@ -13,59 +14,68 @@ class MapPage extends StatelessWidget {
     final activeRoute = appState.activeRoute;
 
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: <Widget>[
-          Text(
-            'Discover NW Trails',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tap a landmark to view details and check in.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: <Widget>[
-              ChoiceChip(
-                label: const Text('All'),
-                selected: appState.selectedCategory == null,
-                onSelected: (_) => appState.setCategory(null),
-              ),
-              for (final LandmarkCategory category in LandmarkCategory.values)
-                ChoiceChip(
-                  label: Text(category.label),
-                  selected: appState.selectedCategory == category,
-                  onSelected: (_) => appState.setCategory(category),
+          SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Text(
+                  'Discover NW Trails',
+                  style: Theme.of(context).textTheme.headlineSmall,
                 ),
-            ],
-          ),
-          if (activeRoute != null) ...<Widget>[
-            const SizedBox(height: 12),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: Row(
+                const SizedBox(height: 8),
+                Text(
+                  'Tap a landmark to view details and check in.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+                const SizedBox(height: 12),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
                   children: <Widget>[
-                    const Icon(Icons.route),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        'Active route: ${activeRoute.name}',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
+                    ChoiceChip(
+                      label: const Text('All'),
+                      selected: appState.selectedCategory == null,
+                      onSelected: (_) => appState.setCategory(null),
                     ),
+                    for (final LandmarkCategory category
+                        in LandmarkCategory.values)
+                      ChoiceChip(
+                        label: Text(category.label),
+                        selected: appState.selectedCategory == category,
+                        onSelected: (_) => appState.setCategory(category),
+                      ),
                   ],
                 ),
-              ),
+                if (activeRoute != null) ...<Widget>[
+                  const SizedBox(height: 12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: <Widget>[
+                          const Icon(Icons.route),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              'Active route: ${activeRoute.name}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 12),
+              ],
             ),
-          ],
-          const SizedBox(height: 12),
-          for (final Landmark landmark in appState.filteredLandmarks)
-            _LandmarkCard(landmark: landmark),
+          ),
+
+          Expanded(child: NwTrailsMap()),
         ],
       ),
     );

@@ -9,12 +9,7 @@ import 'package:nw_trails/core/repositories/landmark_repository.dart';
 import 'package:nw_trails/core/repositories/route_repository.dart';
 import 'package:nw_trails/core/services/location_service.dart';
 
-enum CheckInStatus {
-  success,
-  permissionDenied,
-  outOfRange,
-  duplicate,
-}
+enum CheckInStatus { success, permissionDenied, outOfRange, duplicate }
 
 class CheckInAttemptResult {
   const CheckInAttemptResult({
@@ -34,10 +29,10 @@ class AppState extends ChangeNotifier {
     required CheckInRepository checkInRepository,
     required RouteRepository routeRepository,
     required LocationService locationService,
-  })  : _landmarkRepository = landmarkRepository,
-        _checkInRepository = checkInRepository,
-        _routeRepository = routeRepository,
-        _locationService = locationService {
+  }) : _landmarkRepository = landmarkRepository,
+       _checkInRepository = checkInRepository,
+       _routeRepository = routeRepository,
+       _locationService = locationService {
     _landmarks = _landmarkRepository.getAll();
     _routes = _routeRepository.getAll();
     _refreshCheckInRecords();
@@ -88,9 +83,9 @@ class AppState extends ChangeNotifier {
       _checkInRecords.map((CheckInRecord item) => item.landmarkId).toSet();
 
   BadgeProgress get badgeProgress => BadgeProgress(
-        visitedCount: _visitedLandmarkIds.length,
-        totalLandmarks: _landmarks.length,
-      );
+    visitedCount: _visitedLandmarkIds.length,
+    totalLandmarks: _landmarks.length,
+  );
 
   int visitedCountForCategory(LandmarkCategory category) {
     final visitedIds = _visitedLandmarkIds;
@@ -169,8 +164,8 @@ class AppState extends ChangeNotifier {
       );
     }
 
-    final ProximityCheckResult proximity =
-        await _locationService.checkProximity(landmarkId: landmarkId);
+    final ProximityCheckResult proximity = await _locationService
+        .checkProximity(landmarkId: landmarkId);
 
     if (!proximity.permissionGranted) {
       return const CheckInAttemptResult(
@@ -188,11 +183,7 @@ class AppState extends ChangeNotifier {
     }
 
     _checkInRepository.add(
-      CheckInRecord(
-        landmarkId: landmarkId,
-        checkedInAt: now,
-        note: null,
-      ),
+      CheckInRecord(landmarkId: landmarkId, checkedInAt: now, note: null),
     );
     _refreshCheckInRecords();
     notifyListeners();
