@@ -12,10 +12,7 @@ class MockLocationService {
 
   MockLocationService(this._locationService) {
     _locationService.getCurrentPosition().then(_emit).catchError((_) {});
-    _realLocationSub = _locationService.stream.listen(
-      _emit,
-      onError: (_) {},
-    );
+    _realLocationSub = _locationService.stream.listen(_emit, onError: (_) {});
   }
 
   Position? get lastKnownPosition => _lastPosition;
@@ -23,16 +20,12 @@ class MockLocationService {
   Stream<Position> get stream => _controller.stream;
 
   Future<Position?> ensureCurrentPosition() async {
-    if (_lastPosition != null) {
-      return _lastPosition;
-    }
-
     try {
       final Position position = await _locationService.getCurrentPosition();
       _emit(position);
       return position;
     } catch (_) {
-      return null;
+      return _lastPosition;
     }
   }
 
