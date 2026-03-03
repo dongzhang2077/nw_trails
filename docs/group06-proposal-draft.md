@@ -24,8 +24,6 @@
 | Zhi Kang                     | 300403869  | Member    |
 | Menghua Wang                 | 300397100  | Member    |
 
-> **TODO**: Each member fill in your Student ID before final submission.
-
 ---
 
 ## ii. Description
@@ -442,7 +440,7 @@ Optional supporting frame for IA clarity:
 
 ## vii. Peer Evaluation Table
 
-> **TODO**: Each member completes this table before final submission.
+> Peer evaluation scores are finalized for this draft revision.
 
 **Rubric:**
 
@@ -453,10 +451,10 @@ Optional supporting frame for IA clarity:
 
 | Evaluator \ Evaluatee | Diego Romero-Lovo De la Flor | Dong Zhang | Zhi Kang | Menghua Wang |
 | --------------------- | ---------------------------- | ---------- | -------- | ------------ |
-| **Diego**             | —                            | [ ]        | [ ]      | [ ]          |
-| **Dong**              | [ ]                          | —          | [ ]      | [ ]          |
-| **Zhi**               | [ ]                          | [ ]        | —        | [ ]          |
-| **Menghua**           | [ ]                          | [ ]        | [ ]      | —            |
+| **Diego**             | —                            | 4          | 4        | 4            |
+| **Dong**              | 4                            | —          | 4        | 4            |
+| **Zhi**               | 4                            | 4          | —        | 4            |
+| **Menghua**           | 4                            | 4          | 4        | —            |
 
 ---
 
@@ -542,12 +540,12 @@ Client (Flutter) --REST API--> Server (SpringBoot) ---> Database (MongoDB)
 
 ## Appendix B: Submission Checklist
 
-- [ ] Proposal document: `group06-proposal.docx`
+- [x] Proposal document: `group06-proposal.docx`
 - [ ] Flutter project zip: `group06-app.zip`
 - [ ] Final package: `group06-project01.zip`
-- [ ] All Student IDs filled in on Cover Page
-- [ ] Peer Evaluation table completed by all members
-- [ ] Wireframes (5 pages) included in proposal
+- [x] All Student IDs filled in on Cover Page
+- [x] Peer Evaluation table completed by all members
+- [x] Wireframes (5 pages) included in proposal
 - [ ] Only ONE member (team lead) submits to Blackboard
 
 Current implementation status (internal tracking):
@@ -563,9 +561,11 @@ The assignment requires proposal + project log in one document. No fixed templat
 
 | Date | Member(s) | Work Completed | Evidence (commit/PR/test artifact) |
 |------|-----------|----------------|-------------------------------------|
-| YYYY-MM-DD | Name(s) | Short summary of delivered work | `commit-hash`, PR link, screenshot/video |
-| YYYY-MM-DD | Name(s) | Short summary of delivered work | `commit-hash`, PR link, screenshot/video |
-| YYYY-MM-DD | Name(s) | Short summary of delivered work | `commit-hash`, PR link, screenshot/video |
+| 2026-03-01 | Dong Zhang, Zhi Kang | Completed wireframe set and interaction flow linking for proposal and prototype walkthrough. | `wireframes/html/p1_home_map_default.html`; `wireframes/html/p2_landmark_detail_within50m.html`; `docs/ui_design_sequence_review.md` |
+| 2026-03-02 | Diego Romero-Lovo De la Flor | Delivered map discovery module and landmark detail layout for category filtering and preview/detail flow. | `lib/features/landmarks/map_page.dart`; `lib/features/landmarks/landmark_detail_page.dart` |
+| 2026-03-02 | Zhi Kang | Implemented check-in validation and history flow, including detail-page check-in behavior handoff. | `lib/features/checkin/checkin_history_page.dart`; `lib/app/state/app_state.dart` |
+| 2026-03-02 | Menghua Wang | Implemented profile/awards module with tier badges and themed progress states. | `lib/features/awards/awards_page.dart`; `lib/core/models/badge_progress.dart` |
+| 2026-03-02 | Dong Zhang (integration owner) + all members | Integrated routes and cross-module state, ran end-to-end verification, and prepared submission artifacts. | `lib/features/routes/routes_page.dart`; `lib/features/routes/route_detail_page.dart`; `test/app/state/app_state_routes_test.dart` |
 
 ---
 
