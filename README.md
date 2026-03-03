@@ -13,6 +13,10 @@ Help users discover local landmarks, check in during visits, track progress, and
 - UI/UX wireframe specifications are defined.
 - Flutter app implementation is in early prototype stage.
 
+## Demo Gif
+![mw_trails](allmej.gif)
+
+
 ## Demo Video
 
 - YouTube: https://www.youtube.com/watch?v=6Hc2wNXTypo
