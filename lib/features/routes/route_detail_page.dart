@@ -27,13 +27,7 @@ class RouteDetailPage extends StatelessWidget {
       route.id,
     );
     final bool isRouteCompleted = nextStopId == null;
-    final bool isActiveRoute = appState.activeRouteId == route.id;
-
-    final String actionLabel = isRouteCompleted
-        ? 'BACK TO MAP'
-        : isActiveRoute
-        ? 'CONTINUE THIS ROUTE'
-        : 'START THIS ROUTE';
+    const String actionLabel = 'START';
 
     return Scaffold(
       appBar: AppBar(title: const Text('Route detail')),
@@ -41,32 +35,63 @@ class RouteDetailPage extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(16),
           children: <Widget>[
-            Text(route.name, style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: <Widget>[
-                _MetaChip(
-                  icon: Icons.route_outlined,
-                  label: '${route.distanceKm.toStringAsFixed(1)} km',
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Text(
+                      route.name,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: <Widget>[
+                        _MetaChip(
+                          icon: Icons.route_outlined,
+                          label: '${route.distanceKm.toStringAsFixed(1)} km',
+                        ),
+                        _MetaChip(
+                          icon: Icons.schedule,
+                          label: '${route.durationMinutes} min',
+                        ),
+                        _MetaChip(
+                          icon: Icons.flag_outlined,
+                          label: route.difficulty,
+                        ),
+                        _MetaChip(
+                          icon: Icons.checklist,
+                          label: '$completedStops/$totalStops stops',
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                _MetaChip(
-                  icon: Icons.schedule,
-                  label: '${route.durationMinutes} min',
-                ),
-                _MetaChip(icon: Icons.flag_outlined, label: route.difficulty),
-                _MetaChip(
-                  icon: Icons.checklist,
-                  label: '$completedStops/$totalStops stops',
-                ),
-              ],
+              ),
             ),
             const SizedBox(height: 12),
             Card(
               child: Container(
                 height: 150,
                 padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: <Color>[
+                      Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.09),
+                      Theme.of(
+                        context,
+                      ).colorScheme.secondary.withValues(alpha: 0.07),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                ),
                 alignment: Alignment.centerLeft,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -117,14 +142,15 @@ class RouteDetailPage extends StatelessWidget {
                 isNext: route.landmarkIds[i] == nextStopId,
               ),
             const SizedBox(height: 18),
-            FilledButton(
+            FilledButton.icon(
               onPressed: () {
                 if (!isRouteCompleted) {
                   appState.startRoute(route.id);
                 }
                 Navigator.of(context).pop(true);
               },
-              child: Text(actionLabel),
+              icon: const Icon(Icons.play_arrow_rounded),
+              label: Text(actionLabel),
             ),
           ],
         ),
@@ -141,11 +167,23 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
     return Chip(
-      avatar: Icon(icon, size: 16),
-      label: Text(label),
+      avatar: Icon(icon, size: 15, color: colors.primary),
+      label: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: colors.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
       side: BorderSide.none,
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      backgroundColor: colors.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+        side: BorderSide(color: colors.outlineVariant),
+      ),
     );
   }
 }
@@ -171,10 +209,16 @@ class _RouteStopTile extends StatelessWidget {
         : isNext
         ? 'Next stop'
         : 'Upcoming';
+    final Color tileColor = isVisited
+        ? primary.withValues(alpha: 0.12)
+        : isNext
+        ? Theme.of(context).colorScheme.secondary.withValues(alpha: 0.12)
+        : Colors.white;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
       child: ListTile(
+        tileColor: tileColor,
         leading: CircleAvatar(
           backgroundColor: isVisited
               ? primary

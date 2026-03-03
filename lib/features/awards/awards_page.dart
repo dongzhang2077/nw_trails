@@ -21,13 +21,43 @@ class AwardsPage extends StatelessWidget {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          Center(
-            child: Text(
-              'My Explorer Profile',
-              style: Theme.of(context).textTheme.headlineSmall,
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'My Explorer Profile',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Track your badge progress and recent check-ins.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
+                    child: Icon(
+                      Icons.emoji_events,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           _ProfileHeaderCard(progress: progress),
           const SizedBox(height: 12),
           _SectionCard(
@@ -49,7 +79,8 @@ class AwardsPage extends StatelessWidget {
                   child: _TierBadgeCard(
                     label: 'Silver (10)',
                     earned: progress.silverEarned,
-                    progressText: '${progress.visitedCount}/${progress.silverTarget}',
+                    progressText:
+                        '${progress.visitedCount}/${progress.silverTarget}',
                     highlightColor: const Color(0xFF8A97A8),
                   ),
                 ),
@@ -58,7 +89,8 @@ class AwardsPage extends StatelessWidget {
                   child: _TierBadgeCard(
                     label: 'Gold (15)',
                     earned: progress.goldEarned,
-                    progressText: '${progress.visitedCount}/${progress.goldTarget}',
+                    progressText:
+                        '${progress.visitedCount}/${progress.goldTarget}',
                     highlightColor: const Color(0xFFE0A91E),
                   ),
                 ),
@@ -75,6 +107,7 @@ class AwardsPage extends StatelessWidget {
                 for (final LandmarkCategory category in LandmarkCategory.values)
                   SizedBox(
                     width: 102,
+                    height: 112,
                     child: _ThemeBadgeCard(category: category),
                   ),
               ],
@@ -116,6 +149,8 @@ class _ProfileHeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(14),
@@ -126,17 +161,14 @@ class _ProfileHeaderCard extends StatelessWidget {
               height: 62,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 2,
-                ),
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                border: Border.all(color: colors.primary, width: 2),
+                color: colors.primary.withValues(alpha: 0.08),
               ),
               alignment: Alignment.center,
               child: Text(
                 'DZ',
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: Theme.of(context).colorScheme.primary,
+                  color: colors.primary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -151,24 +183,27 @@ class _ProfileHeaderCard extends StatelessWidget {
             const SizedBox(height: 10),
             ClipRRect(
               borderRadius: BorderRadius.circular(999),
-              child: const SizedBox(
+              child: SizedBox(
                 height: 10,
-                child: ColoredBox(color: Color(0xFFE2E8ED)),
-              ),
-            ),
-            Transform.translate(
-              offset: const Offset(0, -10),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: SizedBox(
-                  height: 10,
-                  child: FractionallySizedBox(
-                    widthFactor: progress.completion.clamp(0.0, 1.0),
-                    alignment: Alignment.centerLeft,
-                    child: const ColoredBox(color: Color(0xFFFF7B2C)),
-                  ),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: <Widget>[
+                    const ColoredBox(color: Color(0xFFE2E8ED)),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        widthFactor: progress.completion.clamp(0.0, 1.0),
+                        child: const ColoredBox(color: Color(0xFFFF7B2C)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              progress.nextBadgeHint,
+              style: Theme.of(context).textTheme.bodySmall,
             ),
           ],
         ),
@@ -220,16 +255,28 @@ class _TierBadgeCard extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
-        color: earned ? highlightColor.withOpacity(0.12) : Colors.transparent,
+        color: earned
+            ? highlightColor.withValues(alpha: 0.12)
+            : Colors.transparent,
         border: Border.all(
-          color: earned ? highlightColor.withOpacity(0.45) : const Color(0xFFE1E5E9),
+          color: earned
+              ? highlightColor.withValues(alpha: 0.45)
+              : const Color(0xFFE1E5E9),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
+          Icon(
+            earned ? Icons.verified : Icons.lock_outline,
+            size: 16,
+            color: earned
+                ? highlightColor
+                : Theme.of(context).colorScheme.outline,
+          ),
+          const SizedBox(height: 6),
           Text(label, style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 16),
+          const SizedBox(height: 10),
           Text(
             progressText,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -254,18 +301,31 @@ class _ThemeBadgeCard extends StatelessWidget {
     final int visited = appState.visitedCountForCategory(category);
     final int total = appState.totalCountForCategory(category);
     final Color tagColor = categoryColor(category);
+    final bool complete = total > 0 && visited >= total;
 
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
+        color: complete ? tagColor.withValues(alpha: 0.08) : null,
         border: Border.all(color: const Color(0xFFE1E5E9)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: <Widget>[
-          Text(_themeBadgeName(category), style: Theme.of(context).textTheme.bodyMedium),
-          const SizedBox(height: 18),
+          Icon(
+            complete ? Icons.verified : Icons.emoji_events_outlined,
+            size: 16,
+            color: complete ? tagColor : Theme.of(context).colorScheme.outline,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            _themeBadgeName(category),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          const Spacer(),
           Text(
             '$visited/$total',
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -313,6 +373,7 @@ class _RecentCheckInTile extends StatelessWidget {
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
+          color: Colors.white,
           border: Border.all(color: const Color(0xFFE1E5E9)),
         ),
         child: Row(
@@ -321,8 +382,16 @@ class _RecentCheckInTile extends StatelessWidget {
               width: 20,
               height: 20,
               decoration: BoxDecoration(
-                color: const Color(0xFFD8EFF2),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(6),
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.place,
+                size: 12,
+                color: Theme.of(context).colorScheme.primary,
               ),
             ),
             const SizedBox(width: 10),
@@ -345,6 +414,7 @@ class _RecentCheckInTile extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(999),
+                color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 border: Border.all(color: const Color(0xFFE1E5E9)),
               ),
               child: Text(hasPhoto ? 'Photo' : 'No Photo'),

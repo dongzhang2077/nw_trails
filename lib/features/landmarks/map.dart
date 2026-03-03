@@ -389,7 +389,7 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
             right: 12,
             bottom: 12,
             child: Card(
-              color: Colors.black.withOpacity(0.68),
+              color: const Color(0xFF1F2933).withValues(alpha: 0.78),
               child: Padding(
                 padding: const EdgeInsets.all(10),
                 child: Text(
