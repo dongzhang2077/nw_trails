@@ -12,11 +12,7 @@ class CheckInHistoryPage extends StatefulWidget {
   State<CheckInHistoryPage> createState() => _CheckInHistoryPageState();
 }
 
-enum _HistoryFilter {
-  all,
-  last7Days,
-  today,
-}
+enum _HistoryFilter { all, last7Days, today }
 
 class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
   _HistoryFilter _filter = _HistoryFilter.all;
@@ -27,14 +23,16 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
     final List<CheckInRecord> allRecords = appState.checkInRecords;
     final DateTime now = DateTime.now();
 
-    final List<CheckInRecord> records = allRecords.where((record) {
-      return switch (_filter) {
-        _HistoryFilter.all => true,
-        _HistoryFilter.last7Days =>
-          now.difference(record.checkedInAt).inDays < 7,
-        _HistoryFilter.today => _isSameDay(record.checkedInAt, now),
-      };
-    }).toList(growable: false);
+    final List<CheckInRecord> records = allRecords
+        .where((record) {
+          return switch (_filter) {
+            _HistoryFilter.all => true,
+            _HistoryFilter.last7Days =>
+              now.difference(record.checkedInAt).inDays < 7,
+            _HistoryFilter.today => _isSameDay(record.checkedInAt, now),
+          };
+        })
+        .toList(growable: false);
 
     final Set<String> uniqueLandmarkIds = allRecords
         .map((record) => record.landmarkId)
@@ -51,59 +49,72 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: Text(
-                    'Check-in History',
-                    style: Theme.of(context).textTheme.headlineSmall,
-                  ),
+            Card(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+                child: Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: <Widget>[
+                          Text(
+                            'Check-in History',
+                            style: Theme.of(context).textTheme.headlineSmall,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Review your latest check-ins. Tap an item to open landmark details.',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                    CircleAvatar(
+                      radius: 17,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).colorScheme.primary.withValues(alpha: 0.1),
+                      child: Icon(
+                        Icons.history,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ],
                 ),
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.primary.withOpacity(0.1),
-                  child: Icon(
-                    Icons.history,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Review your latest check-ins. Tap an item to open landmark details.',
-              style: Theme.of(context).textTheme.bodyMedium,
+              ),
             ),
             const SizedBox(height: 12),
-            Row(
-              children: <Widget>[
-                Expanded(
-                  child: _StatCard(
-                    label: 'Total check-ins',
-                    value: '${allRecords.length}',
-                    icon: Icons.fact_check,
+            SizedBox(
+              height: 98,
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Check-ins',
+                      value: '${allRecords.length}',
+                      icon: Icons.fact_check,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Landmarks visited',
-                    value: '${uniqueLandmarkIds.length}',
-                    icon: Icons.place,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Landmarks',
+                      value: '${uniqueLandmarkIds.length}',
+                      icon: Icons.place,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _StatCard(
-                    label: 'Categories',
-                    value: '$uniqueCategoriesVisited/4',
-                    icon: Icons.grid_view,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _StatCard(
+                      label: 'Categories',
+                      value: '$uniqueCategoriesVisited/4',
+                      icon: Icons.grid_view,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             const SizedBox(height: 10),
             SizedBox(
@@ -149,16 +160,16 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
                   ? _EmptyState(filter: _filter)
                   : ListView.separated(
                       itemCount: records.length,
-                      separatorBuilder: (
-                        BuildContext context,
-                        int index,
-                      ) {
-                        return const SizedBox(height: 8);
+                      separatorBuilder: (BuildContext context, int index) {
+                        return const SizedBox(height: 10);
                       },
                       itemBuilder: (BuildContext context, int index) {
                         final CheckInRecord item = records[index];
-                        final landmark = appState.findLandmarkById(item.landmarkId);
-                        final categoryLabel = landmark?.category.label ?? 'Unknown';
+                        final landmark = appState.findLandmarkById(
+                          item.landmarkId,
+                        );
+                        final categoryLabel =
+                            landmark?.category.label ?? 'Unknown';
                         final categoryTagColor = landmark == null
                             ? Theme.of(context).colorScheme.outline
                             : categoryColor(landmark.category);
@@ -219,24 +230,26 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
                                                     : Image.network(
                                                         landmark.imageUrl,
                                                         fit: BoxFit.cover,
-                                                        errorBuilder: (
-                                                          context,
-                                                          error,
-                                                          stackTrace,
-                                                        ) {
-                                                          return Container(
-                                                            color: Theme.of(
+                                                        errorBuilder:
+                                                            (
                                                               context,
-                                                            ).colorScheme.surfaceContainerHighest,
-                                                            alignment:
-                                                                Alignment.center,
-                                                            child: const Icon(
-                                                              Icons
-                                                                  .image_not_supported_outlined,
-                                                              size: 20,
-                                                            ),
-                                                          );
-                                                        },
+                                                              error,
+                                                              stackTrace,
+                                                            ) {
+                                                              return Container(
+                                                                color: Theme.of(context)
+                                                                    .colorScheme
+                                                                    .surfaceContainerHighest,
+                                                                alignment:
+                                                                    Alignment
+                                                                        .center,
+                                                                child: const Icon(
+                                                                  Icons
+                                                                      .image_not_supported_outlined,
+                                                                  size: 20,
+                                                                ),
+                                                              );
+                                                            },
                                                       ),
                                               ),
                                             ),
@@ -250,18 +263,18 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
                                                     appState.landmarkNameById(
                                                       item.landmarkId,
                                                     ),
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .titleMedium,
+                                                    style: Theme.of(
+                                                      context,
+                                                    ).textTheme.titleMedium,
                                                   ),
                                                   const SizedBox(height: 2),
                                                   Text(
                                                     _formatDate(
                                                       item.checkedInAt,
                                                     ),
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodySmall,
+                                                    style: Theme.of(
+                                                      context,
+                                                    ).textTheme.bodySmall,
                                                   ),
                                                 ],
                                               ),
@@ -277,13 +290,13 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
                                             Chip(
                                               label: Text(categoryLabel),
                                               backgroundColor: categoryTagColor
-                                                  .withOpacity(0.12),
+                                                  .withValues(alpha: 0.12),
                                               side: BorderSide.none,
                                               visualDensity:
                                                   const VisualDensity(
-                                                horizontal: -2,
-                                                vertical: -2,
-                                              ),
+                                                    horizontal: -2,
+                                                    vertical: -2,
+                                                  ),
                                               labelStyle: TextStyle(
                                                 color: categoryTagColor,
                                                 fontWeight: FontWeight.w600,
@@ -306,9 +319,9 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
                                                         .surfaceContainerHighest,
                                                 visualDensity:
                                                     const VisualDensity(
-                                                  horizontal: -2,
-                                                  vertical: -2,
-                                                ),
+                                                      horizontal: -2,
+                                                      vertical: -2,
+                                                    ),
                                               ),
                                           ],
                                         ),
@@ -373,10 +386,7 @@ class _EmptyState extends StatelessWidget {
             color: Theme.of(context).colorScheme.outline,
           ),
           const SizedBox(height: 8),
-          Text(
-            title,
-            style: Theme.of(context).textTheme.titleMedium,
-          ),
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 6),
           Text(
             body,
@@ -402,18 +412,36 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
     return Card(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 6),
-            Text(value, style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 2),
-            Text(label, style: Theme.of(context).textTheme.bodySmall),
-          ],
+      child: SizedBox.expand(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: colors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
+                child: Icon(icon, size: 15, color: colors.primary),
+              ),
+              const SizedBox(height: 6),
+              Text(value, style: Theme.of(context).textTheme.titleMedium),
+              const SizedBox(height: 2),
+              Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -433,9 +461,24 @@ class _FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme colors = Theme.of(context).colorScheme;
+
     return ChoiceChip(
-      label: Text(label),
+      label: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: selected ? Colors.white : colors.onSurface,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
       selected: selected,
+      showCheckmark: false,
+      selectedColor: colors.primary,
+      backgroundColor: colors.surface,
+      side: BorderSide(
+        color: selected ? colors.primary : colors.outlineVariant,
+      ),
+      visualDensity: const VisualDensity(horizontal: -1, vertical: -1),
       onSelected: (_) => onTap(),
     );
   }
@@ -474,7 +517,7 @@ class _TimelineMarker extends StatelessWidget {
               border: Border.all(color: Colors.white, width: 2),
               boxShadow: <BoxShadow>[
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
+                  color: Colors.black.withValues(alpha: 0.08),
                   blurRadius: 4,
                 ),
               ],

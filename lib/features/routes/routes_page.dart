@@ -53,14 +53,41 @@ class _RoutesPageState extends State<RoutesPage> {
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          Text(
-            'Walking Routes',
-            style: Theme.of(context).textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Choose a route, review the stop timeline, and start your journey.',
-            style: Theme.of(context).textTheme.bodyMedium,
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: <Widget>[
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: <Widget>[
+                        Text(
+                          'Walking Routes',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Choose a route, review the stop timeline, and start your journey.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      ],
+                    ),
+                  ),
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.1),
+                    child: Icon(
+                      Icons.route,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -69,17 +96,37 @@ class _RoutesPageState extends State<RoutesPage> {
               scrollDirection: Axis.horizontal,
               children: <Widget>[
                 for (final String filter in _filters)
-                  Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: ChoiceChip(
-                      label: Text(filter),
-                      selected: _selectedFilter == filter,
-                      onSelected: (_) {
-                        setState(() {
-                          _selectedFilter = filter;
-                        });
-                      },
-                    ),
+                  Builder(
+                    builder: (BuildContext context) {
+                      final bool isSelected = _selectedFilter == filter;
+                      final ColorScheme colors = Theme.of(context).colorScheme;
+                      return Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ChoiceChip(
+                          label: Text(
+                            filter,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: isSelected ? Colors.white : colors.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          selected: isSelected,
+                          showCheckmark: false,
+                          selectedColor: colors.primary,
+                          backgroundColor: colors.surface,
+                          side: BorderSide(
+                            color: isSelected
+                                ? colors.primary
+                                : colors.outlineVariant,
+                          ),
+                          onSelected: (_) {
+                            setState(() {
+                              _selectedFilter = filter;
+                            });
+                          },
+                        ),
+                      );
+                    },
                   ),
               ],
             ),
@@ -139,13 +186,34 @@ class _RouteCard extends StatelessWidget {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                 ),
-                if (isActive) const Chip(label: Text('Active')),
+                if (isActive)
+                  Chip(
+                    label: const Text('Active'),
+                    side: BorderSide.none,
+                    backgroundColor: Theme.of(
+                      context,
+                    ).colorScheme.primary.withValues(alpha: 0.14),
+                  ),
               ],
             ),
             const SizedBox(height: 6),
-            Text(
-              '${route.distanceKm} km | ${route.durationMinutes} min '
-              '| ${route.difficulty}',
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: <Widget>[
+                _RouteMetaPill(
+                  icon: Icons.route_outlined,
+                  text: '${route.distanceKm.toStringAsFixed(1)} km',
+                ),
+                _RouteMetaPill(
+                  icon: Icons.schedule,
+                  text: '${route.durationMinutes} min',
+                ),
+                _RouteMetaPill(
+                  icon: Icons.flag_outlined,
+                  text: route.difficulty,
+                ),
+              ],
             ),
             const SizedBox(height: 8),
             Text(
@@ -160,12 +228,39 @@ class _RouteCard extends StatelessWidget {
               style: Theme.of(context).textTheme.bodySmall,
             ),
             const SizedBox(height: 10),
-            FilledButton.tonal(
+            FilledButton.tonalIcon(
               onPressed: onOpenDetail,
-              child: const Text('VIEW ROUTE DETAILS'),
+              icon: const Icon(Icons.timeline),
+              label: const Text('DETAILS'),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _RouteMetaPill extends StatelessWidget {
+  const _RouteMetaPill({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          Icon(icon, size: 15),
+          const SizedBox(width: 4),
+          Text(text, style: Theme.of(context).textTheme.bodySmall),
+        ],
       ),
     );
   }

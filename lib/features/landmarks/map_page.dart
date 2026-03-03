@@ -177,38 +177,48 @@ class _MapPageState extends State<MapPage> {
         controller: _scrollController,
         padding: const EdgeInsets.all(16),
         children: <Widget>[
-          Row(
-            children: <Widget>[
-              Expanded(
-                child: Text(
-                  'NW Trails',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-              ),
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.primary.withOpacity(0.1),
-                child: IconButton(
-                  padding: EdgeInsets.zero,
-                  tooltip: 'Profile',
-                  onPressed: () {
-                    appState.setSelectedTabIndex(2);
-                  },
-                  icon: Icon(
-                    Icons.person,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.primary,
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: <Widget>[
+                  Row(
+                    children: <Widget>[
+                      Expanded(
+                        child: Text(
+                          'NW Trails',
+                          style: Theme.of(context).textTheme.headlineSmall,
+                        ),
+                      ),
+                      CircleAvatar(
+                        radius: 16,
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.1),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          tooltip: 'Profile',
+                          onPressed: () {
+                            appState.setSelectedTabIndex(2);
+                          },
+                          icon: Icon(
+                            Icons.person,
+                            size: 18,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Discover landmarks and open details to check in.',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Discover landmarks and open details to check in.',
-            style: Theme.of(context).textTheme.bodyMedium,
+            ),
           ),
           const SizedBox(height: 12),
           SizedBox(
@@ -249,66 +259,97 @@ class _MapPageState extends State<MapPage> {
             Card(
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
-                    Icon(
-                      Icons.route,
-                      color: Theme.of(context).colorScheme.primary,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(12),
+                    gradient: LinearGradient(
+                      colors: <Color>[
+                        Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.09),
+                        Theme.of(
+                          context,
+                        ).colorScheme.secondary.withValues(alpha: 0.07),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: <Widget>[
-                          Text(
-                            'Active route: ${activeRoute.name}',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            nextRouteStopName == null
-                                ? 'Route completed. Nice work!'
-                                : 'Next stop: $nextRouteStopName '
-                                      '($activeRouteCompletedStops/'
-                                      '${activeRoute.landmarkIds.length})',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          if (nextRouteStopId != null)
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: TextButton.icon(
-                                onPressed: () {
-                                  _focusRouteLandmark(
-                                    appState,
-                                    nextRouteStopId,
-                                  );
-                                },
-                                icon: const Icon(Icons.my_location),
-                                label: const Text('FOCUS NEXT STOP'),
-                              ),
-                            ),
-                        ],
+                  ),
+                  padding: const EdgeInsets.all(10),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: <Widget>[
+                      Icon(
+                        Icons.route,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: <Widget>[
+                            Text(
+                              'Active route: ${activeRoute.name}',
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              nextRouteStopName == null
+                                  ? 'Route completed. Nice work!'
+                                  : 'Next stop: $nextRouteStopName '
+                                        '($activeRouteCompletedStops/'
+                                        '${activeRoute.landmarkIds.length})',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                            if (nextRouteStopId != null)
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed: () {
+                                    _focusRouteLandmark(
+                                      appState,
+                                      nextRouteStopId,
+                                    );
+                                  },
+                                  icon: const Icon(Icons.my_location, size: 18),
+                                  label: const Text('FOCUS NEXT STOP'),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
           ],
           const SizedBox(height: 12),
-          SizedBox(
+          Container(
             height: 370,
-            child: ClipRRect(
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              child: NwTrailsMap(
-                landmarks: landmarks,
-                selectedLandmarkId: selectedLandmark?.id,
-                onLandmarkTap: _selectLandmark,
+              border: Border.all(
+                color: Theme.of(context).colorScheme.outlineVariant,
               ),
+              boxShadow: <BoxShadow>[
+                BoxShadow(
+                  color: const Color(0xFF0F172A).withValues(alpha: 0.08),
+                  blurRadius: 14,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: NwTrailsMap(
+              landmarks: landmarks,
+              selectedLandmarkId: selectedLandmark?.id,
+              onLandmarkTap: _selectLandmark,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
+          Text('Map preview', style: Theme.of(context).textTheme.bodySmall),
+          const SizedBox(height: 4),
           if (selectedLandmark != null)
             Container(
               key: _selectedPreviewKey,
@@ -406,10 +447,11 @@ class _MapPreviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color categoryTagColor = categoryColor(landmark.category);
+    final ColorScheme colors = Theme.of(context).colorScheme;
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
@@ -439,22 +481,45 @@ class _MapPreviewCard extends StatelessWidget {
               spacing: 8,
               runSpacing: 8,
               children: <Widget>[
-                Chip(
-                  label: Text(landmark.category.label),
-                  side: BorderSide.none,
-                  backgroundColor: categoryTagColor.withOpacity(0.14),
-                  labelStyle: TextStyle(
-                    color: categoryTagColor,
-                    fontWeight: FontWeight.w600,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: categoryTagColor.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: Text(
+                    landmark.category.label,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: categoryTagColor,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-                Chip(
-                  avatar: const Icon(Icons.place_outlined, size: 16),
-                  label: Text(landmark.address),
-                  side: BorderSide.none,
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.surfaceContainerHighest,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: colors.surfaceContainerHighest,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: colors.outlineVariant),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Icon(
+                        Icons.place_outlined,
+                        size: 13,
+                        color: colors.primary,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        landmark.address,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colors.onSurface,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -462,38 +527,47 @@ class _MapPreviewCard extends StatelessWidget {
             Text(
               landmark.description,
               style: Theme.of(context).textTheme.bodyMedium,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 8),
-            Wrap(
-              spacing: 12,
-              runSpacing: 6,
-              children: <Widget>[
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Icon(Icons.star, color: Colors.amber.shade700, size: 16),
-                    const SizedBox(width: 4),
-                    Text(landmark.rating.toStringAsFixed(1)),
-                  ],
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: <Widget>[
-                    Icon(
-                      Icons.verified,
-                      color: Theme.of(context).colorScheme.primary,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    const Text('Check-in ready'),
-                  ],
-                ),
-                Text('Distance ${distanceMeters}m'),
-                Text('Check-ins $checkInCount'),
-              ],
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              decoration: BoxDecoration(
+                color: colors.surfaceContainerHighest,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Wrap(
+                spacing: 12,
+                runSpacing: 6,
+                children: <Widget>[
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Icon(Icons.star, color: Colors.amber.shade700, size: 16),
+                      const SizedBox(width: 4),
+                      Text(landmark.rating.toStringAsFixed(1)),
+                    ],
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: <Widget>[
+                      Icon(
+                        Icons.verified,
+                        color: Theme.of(context).colorScheme.primary,
+                        size: 16,
+                      ),
+                      const SizedBox(width: 4),
+                      const Text('Check-in ready'),
+                    ],
+                  ),
+                  Text('Distance ${distanceMeters}m'),
+                  Text('Check-ins $checkInCount'),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            FilledButton(
+            const SizedBox(height: 12),
+            FilledButton.icon(
               onPressed: () {
                 Navigator.of(context).push(
                   MaterialPageRoute<void>(
@@ -501,11 +575,8 @@ class _MapPreviewCard extends StatelessWidget {
                   ),
                 );
               },
-              style: FilledButton.styleFrom(
-                minimumSize: const Size.fromHeight(46),
-                backgroundColor: Theme.of(context).colorScheme.primary,
-              ),
-              child: const Text('View details'),
+              icon: const Icon(Icons.arrow_forward),
+              label: const Text('VIEW DETAILS'),
             ),
           ],
         ),
@@ -532,9 +603,9 @@ class _LandmarkSelectorTile extends StatelessWidget {
     return SizedBox(
       width: 210,
       child: Card(
-        color: isSelected ? color.withOpacity(0.1) : null,
+        color: isSelected ? color.withValues(alpha: 0.1) : null,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           onTap: onTap,
           child: Padding(
             padding: const EdgeInsets.all(10),

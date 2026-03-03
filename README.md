@@ -156,3 +156,4 @@ git checkout -b feature/alice-checkin-ui
 - UI/UX sync snapshot: `docs/design/ui_ux_flow_sync.md`
 - Proposal scope snapshot: `docs/proposal/proposal_scope_sync.md`
 - lib file ownership map: `docs/development/lib_structure_and_ownership.md`
+- Final submission checklist: `docs/final_submission_checklist.md`
