@@ -46,7 +46,6 @@ class AppState extends ChangeNotifier {
     _landmarks = _landmarkRepository.getAll();
     _routes = _routeRepository.getAll();
     _refreshCheckInRecords();
-    unawaited(_initializeBackendSync());
   }
 
   final LandmarkRepository _landmarkRepository;
@@ -62,6 +61,10 @@ class AppState extends ChangeNotifier {
   List<CheckInRecord> _checkInRecords = <CheckInRecord>[];
   bool _isSyncingBackend = false;
   String? _syncError;
+
+  bool _isAuthenticating = false;
+  String? _authError;
+  BackendUserSummary? _currentUser;
 
   int _selectedTabIndex = 0;
   LandmarkCategory? _selectedCategory;
@@ -129,7 +132,14 @@ class AppState extends ChangeNotifier {
   String? get activeRouteId => _activeRouteId;
   bool get isSyncingBackend => _isSyncingBackend;
   String? get syncError => _syncError;
+  bool get isAuthenticating => _isAuthenticating;
+  String? get authError => _authError;
+  BackendUserSummary? get currentUser => _currentUser;
   bool get usingBackend => _backendApiClient != null;
+  bool get isAuthenticated {
+    final BackendApiClient? backendApiClient = _backendApiClient;
+    return backendApiClient == null || backendApiClient.hasSession;
+  }
 
   List<Landmark> get landmarks => List<Landmark>.unmodifiable(_landmarks);
   List<RoutePlan> get routes => List<RoutePlan>.unmodifiable(_routes);
@@ -212,6 +222,82 @@ class AppState extends ChangeNotifier {
       return;
     }
     _selectedCategory = category;
+    notifyListeners();
+  }
+
+  Future<bool> signIn({
+    required String username,
+    required String password,
+  }) async {
+    final BackendApiClient? backendApiClient = _backendApiClient;
+    if (backendApiClient == null) {
+      return true;
+    }
+
+    _isAuthenticating = true;
+    _authError = null;
+    notifyListeners();
+
+    try {
+      final AuthSession session = await backendApiClient.login(
+        username: username,
+        password: password,
+      );
+      _currentUser = session.user;
+      await _syncFromBackend();
+      return true;
+    } on BackendApiException catch (error) {
+      _authError = error.message;
+      return false;
+    } finally {
+      _isAuthenticating = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> signOut() async {
+    final BackendApiClient? backendApiClient = _backendApiClient;
+    if (backendApiClient == null) {
+      return;
+    }
+
+    final String? refreshToken = backendApiClient.refreshToken;
+    if (refreshToken != null && refreshToken.isNotEmpty) {
+      try {
+        await backendApiClient.logout(refreshToken: refreshToken);
+      } on BackendApiException {
+        // Ignore logout network errors and still clear local session.
+      }
+    }
+
+    backendApiClient.clearSession();
+    _currentUser = null;
+    _authError = null;
+    _syncError = null;
+    _isSyncingBackend = false;
+    _activeRouteId = null;
+    _selectedTabIndex = 0;
+    _setCheckInRecords(<CheckInRecord>[]);
+    notifyListeners();
+  }
+
+  Future<void> refreshCurrentUser() async {
+    final BackendApiClient? backendApiClient = _backendApiClient;
+    if (backendApiClient == null || !backendApiClient.hasSession) {
+      return;
+    }
+
+    try {
+      _currentUser = await backendApiClient.fetchCurrentUser();
+      _authError = null;
+    } on BackendApiException catch (error) {
+      if (error.code == 'UNAUTHORIZED') {
+        backendApiClient.clearSession();
+        _currentUser = null;
+        _setCheckInRecords(<CheckInRecord>[]);
+      }
+      _authError = error.message;
+    }
     notifyListeners();
   }
 
@@ -386,16 +472,9 @@ class AppState extends ChangeNotifier {
     );
   }
 
-  Future<void> _initializeBackendSync() async {
-    if (_backendApiClient == null) {
-      return;
-    }
-    await _syncFromBackend();
-  }
-
   Future<void> _syncFromBackend() async {
     final backendApiClient = _backendApiClient;
-    if (backendApiClient == null) {
+    if (backendApiClient == null || !backendApiClient.hasSession) {
       return;
     }
 
@@ -413,8 +492,14 @@ class AppState extends ChangeNotifier {
       _routes = routes;
       _setCheckInRecords(checkIns);
     } catch (error) {
-      _syncError =
-          'Backend sync failed. Check API_BASE_URL / credentials and retry.';
+      if (error is BackendApiException && error.code == 'UNAUTHORIZED') {
+        backendApiClient.clearSession();
+        _currentUser = null;
+        _setCheckInRecords(<CheckInRecord>[]);
+        _syncError = null;
+      } else {
+        _syncError = 'Backend sync failed. Check API_BASE_URL and retry.';
+      }
     } finally {
       _isSyncingBackend = false;
       notifyListeners();

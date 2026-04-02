@@ -50,30 +50,90 @@ class BackendApiException implements Exception {
   }
 }
 
-class BackendApiClient {
-  BackendApiClient({
-    required this.baseUrl,
+class BackendUserSummary {
+  const BackendUserSummary({
+    required this.userId,
     required this.username,
-    required this.password,
-    http.Client? httpClient,
-  }) : _httpClient = httpClient ?? http.Client();
+    required this.displayName,
+    required this.roles,
+  });
+
+  final String userId;
+  final String username;
+  final String displayName;
+  final List<String> roles;
+}
+
+class AuthSession {
+  const AuthSession({
+    required this.accessToken,
+    required this.refreshToken,
+    required this.user,
+  });
+
+  final String accessToken;
+  final String refreshToken;
+  final BackendUserSummary user;
+}
+
+class BackendApiClient {
+  BackendApiClient({required this.baseUrl, http.Client? httpClient})
+    : _httpClient = httpClient ?? http.Client();
 
   factory BackendApiClient.fromEnvironment() {
-    return BackendApiClient(
-      baseUrl: ApiConfig.baseUrl,
-      username: ApiConfig.username,
-      password: ApiConfig.password,
-    );
+    return BackendApiClient(baseUrl: ApiConfig.baseUrl);
   }
 
   final http.Client _httpClient;
 
   final String baseUrl;
-  final String username;
-  final String password;
 
   String? _accessToken;
   String? _refreshToken;
+
+  bool get hasSession => _accessToken != null && _accessToken!.isNotEmpty;
+
+  String? get refreshToken => _refreshToken;
+
+  void clearSession() {
+    _accessToken = null;
+    _refreshToken = null;
+  }
+
+  Future<AuthSession> login({
+    required String username,
+    required String password,
+  }) async {
+    final http.Response response = await _send(
+      method: 'POST',
+      path: '/auth/login',
+      body: <String, dynamic>{'username': username, 'password': password},
+      includeAuthHeader: false,
+    );
+
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _toApiException(response);
+    }
+
+    final Map<String, dynamic> payload = _decodeObject(response.body);
+    final AuthSession session = _toAuthSession(payload);
+    _accessToken = session.accessToken;
+    _refreshToken = session.refreshToken;
+    return session;
+  }
+
+  Future<void> logout({required String refreshToken}) async {
+    await _postJson(
+      '/auth/logout',
+      body: <String, dynamic>{'refreshToken': refreshToken},
+    );
+    clearSession();
+  }
+
+  Future<BackendUserSummary> fetchCurrentUser() async {
+    final Map<String, dynamic> payload = await _getJson('/auth/me');
+    return _toBackendUserSummary(payload);
+  }
 
   Future<List<Landmark>> fetchLandmarks() async {
     final payload = await _getJson('/landmarks');
@@ -178,7 +238,12 @@ class BackendApiClient {
     if (streamedResponse.statusCode == 401) {
       final bool refreshed = await _tryRefresh();
       if (!refreshed) {
-        await _login();
+        clearSession();
+        throw const BackendApiException(
+          statusCode: 401,
+          code: 'UNAUTHORIZED',
+          message: 'Session expired. Please log in again.',
+        );
       }
       streamedResponse = await _sendMultipart(
         path: '/checkins/photos',
@@ -266,7 +331,12 @@ class BackendApiClient {
     if (response.statusCode == 401) {
       final bool refreshed = await _tryRefresh();
       if (!refreshed) {
-        await _login();
+        clearSession();
+        throw const BackendApiException(
+          statusCode: 401,
+          code: 'UNAUTHORIZED',
+          message: 'Session expired. Please log in again.',
+        );
       }
       response = await _send(
         method: method,
@@ -285,27 +355,13 @@ class BackendApiClient {
   }
 
   Future<void> _ensureAuthenticated() async {
-    if (_accessToken != null && _accessToken!.isNotEmpty) {
-      return;
+    if (_accessToken == null || _accessToken!.isEmpty) {
+      throw const BackendApiException(
+        statusCode: 401,
+        code: 'UNAUTHORIZED',
+        message: 'Authentication is required. Please log in.',
+      );
     }
-    await _login();
-  }
-
-  Future<void> _login() async {
-    final response = await _send(
-      method: 'POST',
-      path: '/auth/login',
-      body: <String, dynamic>{'username': username, 'password': password},
-      includeAuthHeader: false,
-    );
-
-    if (response.statusCode < 200 || response.statusCode >= 300) {
-      throw _toApiException(response);
-    }
-
-    final payload = _decodeObject(response.body);
-    _accessToken = _string(payload['accessToken']);
-    _refreshToken = _string(payload['refreshToken']);
   }
 
   Future<bool> _tryRefresh() async {
@@ -468,6 +524,45 @@ class BackendApiClient {
       checkedInAt: checkedInAt,
       note: _string(map?['note']),
       photoUrls: photoUrls,
+    );
+  }
+
+  AuthSession _toAuthSession(Map<String, dynamic> payload) {
+    final String accessToken = _string(payload['accessToken']) ?? '';
+    final String refreshToken = _string(payload['refreshToken']) ?? '';
+    final BackendUserSummary user = _toBackendUserSummary(payload['user']);
+
+    if (accessToken.isEmpty || refreshToken.isEmpty || user.username.isEmpty) {
+      throw const BackendApiException(
+        statusCode: 500,
+        code: 'INVALID_RESPONSE',
+        message: 'Authentication response is missing required fields.',
+      );
+    }
+
+    return AuthSession(
+      accessToken: accessToken,
+      refreshToken: refreshToken,
+      user: user,
+    );
+  }
+
+  BackendUserSummary _toBackendUserSummary(dynamic value) {
+    final Map<String, dynamic>? map = _readMap(value);
+    if (map == null) {
+      return const BackendUserSummary(
+        userId: '',
+        username: '',
+        displayName: '',
+        roles: <String>[],
+      );
+    }
+
+    return BackendUserSummary(
+      userId: _string(map['userId']) ?? '',
+      username: _string(map['username']) ?? '',
+      displayName: _string(map['displayName']) ?? '',
+      roles: _readStringList(map['roles']),
     );
   }
 
