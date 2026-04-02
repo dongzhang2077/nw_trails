@@ -5,7 +5,10 @@
       "name": "NW Trails (Android)",
       "request": "launch",
       "type": "dart",
-      "deviceId": "android"
+      "deviceId": "android",
+      "toolArgs": [
+        "--disable-dds"
+      ]
     }
   ]
 }

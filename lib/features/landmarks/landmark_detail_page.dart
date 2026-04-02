@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:nw_trails/app/state/app_scope.dart';
 import 'package:nw_trails/app/state/app_state.dart';
 import 'package:nw_trails/core/constants/category_colors.dart';
@@ -17,7 +18,45 @@ class LandmarkDetailPage extends StatefulWidget {
 }
 
 class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
+  static const int _maxCheckInPhotos = 9;
+
   bool _isCheckingIn = false;
+  final ImagePicker _imagePicker = ImagePicker();
+  List<XFile> _selectedCheckInPhotos = <XFile>[];
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreLostPickedPhotos();
+  }
+
+  Future<void> _restoreLostPickedPhotos() async {
+    try {
+      final LostDataResponse response = await _imagePicker.retrieveLostData();
+      if (response.isEmpty) {
+        return;
+      }
+
+      final List<XFile>? files = response.files;
+      if (files == null || files.isEmpty) {
+        return;
+      }
+
+      final List<XFile> limitedPhotos = files
+          .where((XFile file) => file.name.trim().isNotEmpty)
+          .take(_maxCheckInPhotos)
+          .toList(growable: false);
+      if (!mounted || limitedPhotos.isEmpty) {
+        return;
+      }
+
+      setState(() {
+        _selectedCheckInPhotos = limitedPhotos;
+      });
+    } catch (error) {
+      debugPrint('Failed to restore lost picked photos: $error');
+    }
+  }
 
   Future<void> _handleCheckIn() async {
     if (_isCheckingIn) {
@@ -30,8 +69,43 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
       _isCheckingIn = true;
     });
 
+    final List<String> uploadedPhotoUrls = <String>[];
+    if (_selectedCheckInPhotos.isNotEmpty) {
+      try {
+        for (final XFile photo in _selectedCheckInPhotos) {
+          final Uint8List bytes = await photo.readAsBytes();
+          if (bytes.isEmpty) {
+            throw const FormatException('Selected photo is empty.');
+          }
+
+          final String? photoUrl = await appState.uploadCheckInPhoto(
+            bytes: bytes,
+            fileName: photo.name,
+          );
+          if (photoUrl != null && photoUrl.isNotEmpty) {
+            uploadedPhotoUrls.add(photoUrl);
+          }
+        }
+      } catch (_) {
+        if (mounted) {
+          setState(() {
+            _isCheckingIn = false;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Photo upload failed. Please try again.'),
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    final int attachedPhotoCount = uploadedPhotoUrls.length;
+
     final CheckInAttemptResult result = await appState.attemptCheckIn(
       widget.landmarkId,
+      photoUrls: uploadedPhotoUrls,
     );
 
     if (!mounted) {
@@ -40,6 +114,9 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
 
     setState(() {
       _isCheckingIn = false;
+      if (result.status == CheckInStatus.success) {
+        _selectedCheckInPhotos = <XFile>[];
+      }
     });
 
     String? nextRouteStopName;
@@ -64,6 +141,7 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
       totalLandmarks: appState.badgeProgress.totalLandmarks,
       nextBadgeHint: appState.badgeProgress.nextBadgeHint,
       nextRouteStopName: nextRouteStopName,
+      attachedPhotoCount: attachedPhotoCount,
     );
 
     if (!mounted || action == null) {
@@ -85,6 +163,56 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
         appState.setSelectedTabIndex(0);
         Navigator.of(context).pop();
         return;
+    }
+  }
+
+  Future<void> _pickCheckInPhotos() async {
+    try {
+      final List<XFile> photos = await _imagePicker.pickMultiImage(
+        maxWidth: 1800,
+        imageQuality: 85,
+      );
+      if (photos.isEmpty) {
+        return;
+      }
+
+      final List<XFile> limitedPhotos = photos
+          .where((XFile file) => file.name.trim().isNotEmpty)
+          .take(_maxCheckInPhotos)
+          .toList(growable: false);
+
+      if (!mounted) {
+        return;
+      }
+
+      if (limitedPhotos.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No valid photos were selected.')),
+        );
+        return;
+      }
+
+      setState(() {
+        _selectedCheckInPhotos = limitedPhotos;
+      });
+
+      final String selectedMessage = photos.length > _maxCheckInPhotos
+          ? 'Selected first $_maxCheckInPhotos photos. '
+                'Tap CHECK IN to upload.'
+          : '${limitedPhotos.length} '
+                '${limitedPhotos.length == 1 ? 'photo' : 'photos'} selected. '
+                'Tap CHECK IN to upload.';
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(selectedMessage)),
+      );
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Could not pick photos.')));
     }
   }
 
@@ -163,6 +291,7 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
     required int totalLandmarks,
     required String nextBadgeHint,
     required String? nextRouteStopName,
+    required int attachedPhotoCount,
   }) {
     final bool isSuccess = result.status == CheckInStatus.success;
     final bool canGoToNextStop = isSuccess && nextRouteStopName != null;
@@ -274,6 +403,26 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
                     ),
                     const SizedBox(height: 10),
                     Text(result.message, style: theme.textTheme.bodyMedium),
+                    if (attachedPhotoCount > 0) ...<Widget>[
+                      const SizedBox(height: 8),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: colors.primaryContainer,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '$attachedPhotoCount '
+                          '${attachedPhotoCount == 1 ? 'photo' : 'photos'} '
+                          'attached. Review in Check-in History > View photos.',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: colors.onPrimaryContainer,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 12),
                     Row(
                       children: <Widget>[
@@ -604,6 +753,38 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: <Widget>[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Optional check-in photos',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'Select up to 9 photos. They upload when you tap CHECK IN.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ),
+            const SizedBox(height: 6),
+            if (_selectedCheckInPhotos.isEmpty)
+              OutlinedButton.icon(
+                onPressed: _pickCheckInPhotos,
+                icon: const Icon(Icons.add_a_photo_outlined),
+                label: const Text('ADD PHOTOS'),
+              )
+            else
+              FilledButton.icon(
+                onPressed: _pickCheckInPhotos,
+                icon: const Icon(Icons.check_circle_outline),
+                label: Text(
+                  '${_selectedCheckInPhotos.length}/$_maxCheckInPhotos '
+                  'PHOTOS SELECTED',
+                ),
+              ),
+            const SizedBox(height: 8),
             FilledButton.icon(
               onPressed: _isCheckingIn ? null : _handleCheckIn,
               icon: Icon(

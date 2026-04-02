@@ -16,6 +16,7 @@ dependencies:
   mapbox_maps_flutter: ^2.19.1
   flutter_joystick: ^0.2.2
   url_launcher: ^6.3.2
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:
