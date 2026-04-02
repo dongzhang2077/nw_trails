@@ -1,8 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:nw_trails/app/state/app_scope.dart';
 import 'package:nw_trails/app/state/app_state.dart';
 import 'package:nw_trails/core/constants/category_colors.dart';
+import 'package:nw_trails/core/models/landmark.dart';
 import 'package:nw_trails/core/models/landmark_category.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class LandmarkDetailPage extends StatefulWidget {
   const LandmarkDetailPage({required this.landmarkId, super.key});
@@ -85,6 +88,72 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
     }
   }
 
+  Future<void> _openDirections(Landmark landmark) async {
+    final coordinates = landmark.point.coordinates;
+    final double latitude = coordinates.lat.toDouble();
+    final double longitude = coordinates.lng.toDouble();
+
+    final Uri webDirectionsUri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination='
+      '$latitude,$longitude&travelmode=walking',
+    );
+
+    final Uri platformDirectionsUri = switch (defaultTargetPlatform) {
+      TargetPlatform.iOS => Uri.parse(
+        'http://maps.apple.com/?daddr=$latitude,$longitude&dirflg=w',
+      ),
+      TargetPlatform.android => Uri.parse(
+        'google.navigation:q=$latitude,$longitude&mode=w',
+      ),
+      _ => webDirectionsUri,
+    };
+
+    Future<bool> launchWithMode(Uri uri, LaunchMode mode) async {
+      try {
+        return await launchUrl(uri, mode: mode);
+      } catch (error) {
+        debugPrint('Failed to launch directions URI: $uri ($error)');
+        return false;
+      }
+    }
+
+    if (platformDirectionsUri != webDirectionsUri) {
+      final bool launchedPlatform = await launchWithMode(
+        platformDirectionsUri,
+        LaunchMode.externalApplication,
+      );
+      if (launchedPlatform) {
+        return;
+      }
+    }
+
+    final bool launchedWebExternal = await launchWithMode(
+      webDirectionsUri,
+      LaunchMode.externalApplication,
+    );
+    if (launchedWebExternal) {
+      return;
+    }
+
+    final bool launchedWebDefault = await launchWithMode(
+      webDirectionsUri,
+      LaunchMode.platformDefault,
+    );
+    if (launchedWebDefault) {
+      return;
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Could not open a maps app for directions.'),
+      ),
+    );
+  }
+
   Future<_PostCheckInAction?> _showCheckInResultDialog({
     required BuildContext context,
     required CheckInAttemptResult result,
@@ -155,7 +224,9 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
 
         return Dialog(
           insetPadding: const EdgeInsets.symmetric(horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 330),
             child: SingleChildScrollView(
@@ -202,10 +273,7 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Text(
-                      result.message,
-                      style: theme.textTheme.bodyMedium,
-                    ),
+                    Text(result.message, style: theme.textTheme.bodyMedium),
                     const SizedBox(height: 12),
                     Row(
                       children: <Widget>[
@@ -237,7 +305,9 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
                               alignment: Alignment.centerLeft,
                               child: FractionallySizedBox(
                                 widthFactor: progressFraction,
-                                child: const ColoredBox(color: Color(0xFFFF6B35)),
+                                child: const ColoredBox(
+                                  color: Color(0xFFFF6B35),
+                                ),
                               ),
                             ),
                           ],
@@ -274,7 +344,9 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
                       width: double.infinity,
                       child: FilledButton(
                         onPressed: () {
-                          Navigator.of(dialogContext).pop(_PostCheckInAction.stayHere);
+                          Navigator.of(
+                            dialogContext,
+                          ).pop(_PostCheckInAction.stayHere);
                         },
                         child: const Text('Done'),
                       ),
@@ -289,14 +361,18 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
                       children: <Widget>[
                         TextButton(
                           onPressed: () {
-                            Navigator.of(dialogContext).pop(_PostCheckInAction.stayHere);
+                            Navigator.of(
+                              dialogContext,
+                            ).pop(_PostCheckInAction.stayHere);
                           },
                           child: const Text('Stay'),
                         ),
                         const SizedBox(width: 6),
                         TextButton(
                           onPressed: () {
-                            Navigator.of(dialogContext).pop(_PostCheckInAction.viewHistory);
+                            Navigator.of(
+                              dialogContext,
+                            ).pop(_PostCheckInAction.viewHistory);
                           },
                           child: const Text('View history'),
                         ),
@@ -453,10 +529,11 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
                           landmark.address,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: colors.onSurface,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: colors.onSurface,
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ),
                     ],
@@ -536,13 +613,7 @@ class _LandmarkDetailPageState extends State<LandmarkDetailPage> {
             ),
             const SizedBox(height: 8),
             OutlinedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Directions integration pending.'),
-                  ),
-                );
-              },
+              onPressed: () => _openDirections(landmark),
               icon: const Icon(Icons.near_me_outlined),
               label: const Text('GET DIRECTIONS'),
             ),

@@ -7,3 +7,4 @@
 - Development file ownership: `docs/development/lib_structure_and_ownership.md`
 - Test feedback template: `docs/testing/test_feedback_template.md`
 - Smoke test + demo video guide: `docs/testing/smoke_test_and_demo_video.md`
+- Manual integration test runbook: `docs/testing/manual_integration_test_runbook.md`
