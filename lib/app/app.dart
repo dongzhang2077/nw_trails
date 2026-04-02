@@ -10,6 +10,7 @@ import 'package:nw_trails/core/repositories/stub/stub_route_repository.dart';
 import 'package:nw_trails/core/services/device_geolocation_service.dart';
 import 'package:nw_trails/core/services/mock_geolocation_service.dart';
 import 'package:nw_trails/core/services/proximity_location_service.dart';
+import 'package:nw_trails/features/auth/login_page.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 class NWTrailsApp extends StatefulWidget {
@@ -54,7 +55,7 @@ class _NWTrailsAppState extends State<NWTrailsApp> {
         debugShowCheckedModeBanner: false,
         title: 'NW Trails',
         theme: buildAppTheme(),
-        home: const MainShell(),
+        home: const _AppHomeGate(),
       ),
     );
   }
@@ -73,5 +74,18 @@ class _NWTrailsAppState extends State<NWTrailsApp> {
         ),
       );
     }
+  }
+}
+
+class _AppHomeGate extends StatelessWidget {
+  const _AppHomeGate();
+
+  @override
+  Widget build(BuildContext context) {
+    final appState = AppScope.of(context);
+    if (appState.usingBackend && !appState.isAuthenticated) {
+      return const LoginPage();
+    }
+    return const MainShell();
   }
 }

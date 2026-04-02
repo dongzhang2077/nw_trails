@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:nw_trails/app/state/app_scope.dart';
+import 'package:nw_trails/features/account/account_page.dart';
 import 'package:nw_trails/features/awards/awards_page.dart';
 import 'package:nw_trails/features/checkin/checkin_history_page.dart';
 import 'package:nw_trails/features/landmarks/map_page.dart';
@@ -12,11 +13,12 @@ class MainShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final appState = AppScope.of(context);
 
-    const pages = <Widget>[
+    const List<Widget> pages = <Widget>[
       MapPage(),
       CheckInHistoryPage(),
       AwardsPage(),
       RoutesPage(),
+      AccountPage(),
     ];
 
     return Scaffold(
@@ -24,7 +26,7 @@ class MainShell extends StatelessWidget {
         children: <Widget>[
           if (appState.isSyncingBackend)
             const LinearProgressIndicator(minHeight: 3),
-          if (appState.syncError != null)
+          if (appState.syncError != null && appState.isAuthenticated)
             MaterialBanner(
               content: Text(appState.syncError!),
               leading: const Icon(Icons.sync_problem_outlined),
@@ -68,6 +70,11 @@ class MainShell extends StatelessWidget {
             icon: Icon(Icons.route_outlined),
             selectedIcon: Icon(Icons.route),
             label: 'Routes',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Account',
           ),
         ],
       ),
