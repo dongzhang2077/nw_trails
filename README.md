@@ -94,6 +94,17 @@ flutter run -d <device-id> --dart-define=MAPBOX_ACCESS_TOKEN=$token
 
 device id example: emulator-5554
 
+If you see a debug disconnect like:
+
+- `Error connecting to the service protocol`
+- `DartDevelopmentServiceException`
+
+run with DDS disabled:
+
+```powershell
+flutter run -d <device-id> --disable-dds --dart-define=MAPBOX_ACCESS_TOKEN=$token
+```
+
 ### 3) Historic Downtown Walk route test (emulator)
 
 Keep `flutter run` in one terminal. Open another terminal for ADB location injection.

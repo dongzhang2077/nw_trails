@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
@@ -90,7 +91,10 @@ class BackendApiClient {
   }
 
   Future<List<CheckInRecord>> fetchCheckIns({String period = 'ALL'}) async {
-    final payload = await _getJson('/checkins', query: <String, String>{'period': period});
+    final payload = await _getJson(
+      '/checkins',
+      query: <String, String>{'period': period},
+    );
     final items = _readList(payload, 'items');
     return items.map(_toCheckInRecord).toList(growable: false);
   }
@@ -104,6 +108,7 @@ class BackendApiClient {
     required double latitude,
     required double longitude,
     String? note,
+    List<String>? photoUrls,
   }) async {
     try {
       final payload = await _postJson(
@@ -113,6 +118,7 @@ class BackendApiClient {
           'latitude': latitude,
           'longitude': longitude,
           'note': note,
+          'photoUrls': photoUrls,
         },
       );
 
@@ -153,6 +159,63 @@ class BackendApiClient {
           );
       }
     }
+  }
+
+  Future<String> uploadCheckInPhoto({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    await _ensureAuthenticated();
+
+    http.StreamedResponse streamedResponse = await _sendMultipart(
+      path: '/checkins/photos',
+      fileFieldName: 'file',
+      bytes: bytes,
+      fileName: fileName,
+      accessToken: _accessToken,
+    );
+
+    if (streamedResponse.statusCode == 401) {
+      final bool refreshed = await _tryRefresh();
+      if (!refreshed) {
+        await _login();
+      }
+      streamedResponse = await _sendMultipart(
+        path: '/checkins/photos',
+        fileFieldName: 'file',
+        bytes: bytes,
+        fileName: fileName,
+        accessToken: _accessToken,
+      );
+    }
+
+    final http.Response response = await http.Response.fromStream(
+      streamedResponse,
+    );
+    if (response.statusCode < 200 || response.statusCode >= 300) {
+      throw _toApiException(response);
+    }
+
+    final Map<String, dynamic> payload = _decodeObject(response.body);
+    final String? photoUrl = _string(payload['photoUrl']);
+    if (photoUrl == null || photoUrl.isEmpty) {
+      throw const BackendApiException(
+        statusCode: 500,
+        code: 'INVALID_RESPONSE',
+        message: 'Backend upload response is missing photoUrl.',
+      );
+    }
+
+    return photoUrl;
+  }
+
+  Future<Uint8List> fetchCheckInPhotoBytes({required String photoUrl}) async {
+    final String path = _resolveApiPath(photoUrl);
+    final http.Response response = await _sendAuthorized(
+      method: 'GET',
+      path: path,
+    );
+    return response.bodyBytes;
   }
 
   Future<Map<String, dynamic>> _getJson(
@@ -232,10 +295,7 @@ class BackendApiClient {
     final response = await _send(
       method: 'POST',
       path: '/auth/login',
-      body: <String, dynamic>{
-        'username': username,
-        'password': password,
-      },
+      body: <String, dynamic>{'username': username, 'password': password},
       includeAuthHeader: false,
     );
 
@@ -301,6 +361,24 @@ class BackendApiClient {
     }
   }
 
+  Future<http.StreamedResponse> _sendMultipart({
+    required String path,
+    required String fileFieldName,
+    required List<int> bytes,
+    required String fileName,
+    String? accessToken,
+  }) {
+    final Uri uri = Uri.parse('$baseUrl$path');
+    final http.MultipartRequest request = http.MultipartRequest('POST', uri);
+    if (accessToken != null && accessToken.isNotEmpty) {
+      request.headers['Authorization'] = 'Bearer $accessToken';
+    }
+    request.files.add(
+      http.MultipartFile.fromBytes(fileFieldName, bytes, filename: fileName),
+    );
+    return _httpClient.send(request);
+  }
+
   BackendApiException _toApiException(http.Response response) {
     final String fallbackMessage =
         'Backend request failed with status ${response.statusCode}.';
@@ -332,8 +410,8 @@ class BackendApiClient {
 
   Landmark _toLandmark(dynamic value) {
     final map = _readMap(value);
-    final String categoryRaw =
-        (_string(map?['category']) ?? 'historic').toLowerCase();
+    final String categoryRaw = (_string(map?['category']) ?? 'historic')
+        .toLowerCase();
     final LandmarkCategory category = LandmarkCategory.values.firstWhere(
       (item) => item.name == categoryRaw,
       orElse: () => LandmarkCategory.historic,
@@ -374,13 +452,33 @@ class BackendApiClient {
   CheckInRecord _toCheckInRecord(dynamic value) {
     final map = _readMap(value);
     final String rawTimestamp = _string(map?['checkedInAt']) ?? '';
-    final DateTime checkedInAt = DateTime.tryParse(rawTimestamp)?.toLocal() ?? DateTime.now();
+    final DateTime checkedInAt =
+        DateTime.tryParse(rawTimestamp)?.toLocal() ?? DateTime.now();
+
+    List<String> photoUrls = _readStringList(map?['photoUrls']);
+    if (photoUrls.isEmpty) {
+      final String? singlePhotoUrl = _string(map?['photoUrl']);
+      if (singlePhotoUrl != null && singlePhotoUrl.isNotEmpty) {
+        photoUrls = <String>[singlePhotoUrl];
+      }
+    }
 
     return CheckInRecord(
       landmarkId: _string(map?['landmarkId']) ?? '',
       checkedInAt: checkedInAt,
       note: _string(map?['note']),
+      photoUrls: photoUrls,
     );
+  }
+
+  List<String> _readStringList(dynamic value) {
+    if (value is! List<dynamic>) {
+      return <String>[];
+    }
+    return value
+        .whereType<String>()
+        .where((String item) => item.isNotEmpty)
+        .toList(growable: false);
   }
 
   List<dynamic> _readList(Map<String, dynamic>? map, String key) {
@@ -408,6 +506,20 @@ class BackendApiClient {
       throw const FormatException('Response body is not a JSON object.');
     }
     return map;
+  }
+
+  String _resolveApiPath(String pathOrUrl) {
+    if (pathOrUrl.startsWith('/')) {
+      return pathOrUrl;
+    }
+
+    final Uri uri = Uri.parse(pathOrUrl);
+    final String path = uri.path;
+    if (path.startsWith('/')) {
+      return path;
+    }
+
+    return '/$path';
   }
 
   int? _readDistance(Map<String, dynamic>? details) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:typed_data';
 import 'package:nw_trails/app/state/app_scope.dart';
 import 'package:nw_trails/core/constants/category_colors.dart';
 import 'package:nw_trails/core/models/checkin_record.dart';
@@ -16,6 +17,154 @@ enum _HistoryFilter { all, last7Days, today }
 
 class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
   _HistoryFilter _filter = _HistoryFilter.all;
+  final Map<String, Uint8List?> _photoBytesCache = <String, Uint8List?>{};
+  final Set<String> _loadingPhotoUrls = <String>{};
+
+  Future<Uint8List?> _loadPhotoBytes(String photoUrl) async {
+    final appState = AppScope.of(context);
+
+    Uint8List? bytes = _photoBytesCache[photoUrl];
+    if (bytes == null && !_loadingPhotoUrls.contains(photoUrl)) {
+      setState(() {
+        _loadingPhotoUrls.add(photoUrl);
+      });
+      bytes = await appState.loadCheckInPhotoBytes(photoUrl);
+      if (mounted) {
+        setState(() {
+          _loadingPhotoUrls.remove(photoUrl);
+          _photoBytesCache[photoUrl] = bytes;
+        });
+      }
+    }
+
+    return bytes;
+  }
+
+  bool _isAnyPhotoLoading(List<String> photoUrls) {
+    for (final String photoUrl in photoUrls) {
+      if (_loadingPhotoUrls.contains(photoUrl)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  Future<void> _showPhotoPreview(Uint8List bytes) async {
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              Align(
+                alignment: Alignment.topRight,
+                child: IconButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  icon: const Icon(Icons.close),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: InteractiveViewer(
+                    child: Image.memory(bytes, fit: BoxFit.contain),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _openCheckInPhotos(List<String> photoUrls) async {
+    final List<MapEntry<String, Uint8List>> loadedPhotos =
+        <MapEntry<String, Uint8List>>[];
+
+    for (final String photoUrl in photoUrls) {
+      final Uint8List? bytes = await _loadPhotoBytes(photoUrl);
+      if (bytes != null) {
+        loadedPhotos.add(MapEntry<String, Uint8List>(photoUrl, bytes));
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    if (loadedPhotos.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Photo preview is unavailable.')),
+      );
+      return;
+    }
+
+    if (loadedPhotos.length == 1) {
+      await _showPhotoPreview(loadedPhotos.first.value);
+      return;
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return Dialog(
+          insetPadding: const EdgeInsets.all(20),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: <Widget>[
+                Row(
+                  children: <Widget>[
+                    Expanded(
+                      child: Text(
+                        '${loadedPhotos.length} photos',
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  width: 320,
+                  height: 300,
+                  child: GridView.builder(
+                    itemCount: loadedPhotos.length,
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: 8,
+                          mainAxisSpacing: 8,
+                        ),
+                    itemBuilder: (BuildContext context, int index) {
+                      final Uint8List bytes = loadedPhotos[index].value;
+                      return InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: () => _showPhotoPreview(bytes),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(10),
+                          child: Image.memory(bytes, fit: BoxFit.cover),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -165,6 +314,7 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
                       },
                       itemBuilder: (BuildContext context, int index) {
                         final CheckInRecord item = records[index];
+                        final List<String> photoUrls = item.photoUrls;
                         final landmark = appState.findLandmarkById(
                           item.landmarkId,
                         );
@@ -323,8 +473,57 @@ class _CheckInHistoryPageState extends State<CheckInHistoryPage> {
                                                       vertical: -2,
                                                     ),
                                               ),
+                                            if (photoUrls.isNotEmpty)
+                                              Chip(
+                                                avatar: const Icon(
+                                                  Icons.photo_camera_outlined,
+                                                  size: 16,
+                                                ),
+                                                label: Text(
+                                                  'Photos (${photoUrls.length})',
+                                                ),
+                                                side: BorderSide.none,
+                                                backgroundColor: Theme.of(
+                                                  context,
+                                                ).colorScheme.primaryContainer,
+                                                visualDensity:
+                                                    const VisualDensity(
+                                                      horizontal: -2,
+                                                      vertical: -2,
+                                                    ),
+                                              ),
                                           ],
                                         ),
+                                        if (photoUrls.isNotEmpty) ...<Widget>[
+                                          const SizedBox(height: 6),
+                                          Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: TextButton.icon(
+                                              onPressed: _isAnyPhotoLoading(
+                                                    photoUrls,
+                                                  )
+                                                  ? null
+                                                  : () => _openCheckInPhotos(
+                                                      photoUrls,
+                                                    ),
+                                              icon: _isAnyPhotoLoading(
+                                                    photoUrls,
+                                                  )
+                                                  ? const SizedBox(
+                                                      width: 14,
+                                                      height: 14,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                            strokeWidth: 2,
+                                                          ),
+                                                    )
+                                                  : const Icon(
+                                                      Icons.remove_red_eye,
+                                                    ),
+                                              label: const Text('View photos'),
+                                            ),
+                                          ),
+                                        ],
                                       ],
                                     ),
                                   ),

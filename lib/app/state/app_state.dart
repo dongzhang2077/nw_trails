@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart' as geo;
@@ -75,6 +76,52 @@ class AppState extends ChangeNotifier {
 
   Future<geo.Position?> useDeviceLocation() async {
     return _mockLocationService.useDeviceLocation();
+  }
+
+  Future<String?> uploadCheckInPhoto({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    if (bytes.isEmpty) {
+      return null;
+    }
+
+    final BackendApiClient? backendApiClient = _backendApiClient;
+    if (backendApiClient == null) {
+      final String mimeType = _mimeTypeFromFileName(fileName);
+      return 'data:$mimeType;base64,${base64Encode(bytes)}';
+    }
+
+    return backendApiClient.uploadCheckInPhoto(
+      bytes: bytes,
+      fileName: fileName,
+    );
+  }
+
+  Future<Uint8List?> loadCheckInPhotoBytes(String photoUrl) async {
+    if (photoUrl.startsWith('data:')) {
+      final int commaIndex = photoUrl.indexOf(',');
+      if (commaIndex < 0 || commaIndex >= photoUrl.length - 1) {
+        return null;
+      }
+      final String encodedData = photoUrl.substring(commaIndex + 1);
+      try {
+        return base64Decode(encodedData);
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final BackendApiClient? backendApiClient = _backendApiClient;
+    if (backendApiClient == null) {
+      return null;
+    }
+
+    try {
+      return await backendApiClient.fetchCheckInPhotoBytes(photoUrl: photoUrl);
+    } on BackendApiException {
+      return null;
+    }
   }
 
   int get selectedTabIndex => _selectedTabIndex;
@@ -211,11 +258,17 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<CheckInAttemptResult> attemptCheckIn(String landmarkId) async {
+  Future<CheckInAttemptResult> attemptCheckIn(
+    String landmarkId, {
+    List<String>? photoUrls,
+  }) async {
     final DateTime now = DateTime.now();
 
     if (_backendApiClient == null &&
-        _checkInRepository.hasCheckInForDate(landmarkId: landmarkId, date: now)) {
+        _checkInRepository.hasCheckInForDate(
+          landmarkId: landmarkId,
+          date: now,
+        )) {
       return const CheckInAttemptResult(
         status: CheckInStatus.duplicate,
         message: 'You already checked in at this landmark today.',
@@ -270,6 +323,7 @@ class AppState extends ChangeNotifier {
             latitude: lastPosition.latitude,
             longitude: lastPosition.longitude,
             note: null,
+            photoUrls: photoUrls,
           );
 
       switch (backendResult.status) {
@@ -311,7 +365,12 @@ class AppState extends ChangeNotifier {
     }
 
     _checkInRepository.add(
-      CheckInRecord(landmarkId: landmarkId, checkedInAt: now, note: null),
+      CheckInRecord(
+        landmarkId: landmarkId,
+        checkedInAt: now,
+        note: null,
+        photoUrls: List<String>.from(photoUrls ?? const <String>[]),
+      ),
     );
     _refreshCheckInRecords();
 
@@ -393,6 +452,17 @@ class AppState extends ChangeNotifier {
     return '\n\nRoute progress: '
         '$completedStops/${route.landmarkIds.length} stops. '
         'Next stop: ${landmarkNameById(nextStopId)}.';
+  }
+
+  String _mimeTypeFromFileName(String fileName) {
+    final String lowered = fileName.toLowerCase();
+    if (lowered.endsWith('.png')) {
+      return 'image/png';
+    }
+    if (lowered.endsWith('.webp')) {
+      return 'image/webp';
+    }
+    return 'image/jpeg';
   }
 
   void _refreshCheckInRecords() {
