@@ -49,17 +49,20 @@ class _MapPageState extends State<MapPage> {
         );
       }
 
-      final BuildContext? targetContext = _selectedPreviewKey.currentContext;
-      if (targetContext == null) {
-        return;
-      }
-
       Future<void>.delayed(const Duration(milliseconds: 80), () {
         if (!mounted) {
           return;
         }
+        final BuildContext? currentTargetContext =
+            _selectedPreviewKey.currentContext;
+        if (currentTargetContext == null) {
+          return;
+        }
+        if (!currentTargetContext.mounted) {
+          return;
+        }
         Scrollable.ensureVisible(
-          targetContext,
+          currentTargetContext,
           alignment: fromExplore ? 0.12 : 0.08,
           duration: const Duration(milliseconds: 460),
           curve: Curves.easeOutCubic,
@@ -412,7 +415,7 @@ class _MapPageState extends State<MapPage> {
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: remainingLandmarks.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                separatorBuilder: (_, index) => const SizedBox(width: 8),
                 itemBuilder: (context, index) {
                   final Landmark landmark = remainingLandmarks[index];
                   final bool isSelected = landmark.id == selectedLandmark?.id;

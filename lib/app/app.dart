@@ -3,6 +3,7 @@ import 'package:nw_trails/app/main_shell.dart';
 import 'package:nw_trails/app/state/app_scope.dart';
 import 'package:nw_trails/app/state/app_state.dart';
 import 'package:nw_trails/core/constants/app_theme.dart';
+import 'package:nw_trails/core/network/backend_api_client.dart';
 import 'package:nw_trails/core/repositories/stub/stub_checkin_repository.dart';
 import 'package:nw_trails/core/repositories/stub/stub_landmark_repository.dart';
 import 'package:nw_trails/core/repositories/stub/stub_route_repository.dart';
@@ -19,18 +20,24 @@ class NWTrailsApp extends StatefulWidget {
 }
 
 class _NWTrailsAppState extends State<NWTrailsApp> {
+  static const bool _useBackend = bool.fromEnvironment(
+    'USE_BACKEND',
+    defaultValue: true,
+  );
+
   late final AppState _appState = AppState(
     landmarkRepository: StubLandmarkRepository(),
     checkInRepository: StubCheckInRepository(),
     routeRepository: StubRouteRepository(),
     locationService: ProximityLocationService(),
     mockLocationService: MockLocationService(DeviceGeolocationService()),
+    backendApiClient: _useBackend ? BackendApiClient.fromEnvironment() : null,
   );
 
   @override
   void initState() {
-    _requestLocationPermission(mounted, context);
     super.initState();
+    _requestLocationPermission();
   }
 
   @override
@@ -51,15 +58,13 @@ class _NWTrailsAppState extends State<NWTrailsApp> {
       ),
     );
   }
-}
 
-Future<void> _requestLocationPermission(
-  bool mounted,
-  BuildContext context,
-) async {
-  final status = await Permission.locationWhenInUse.request();
-  if (status.isDenied || status.isPermanentlyDenied) {
-    if (mounted) {
+  Future<void> _requestLocationPermission() async {
+    final status = await Permission.locationWhenInUse.request();
+    if (!mounted) {
+      return;
+    }
+    if (status.isDenied || status.isPermanentlyDenied) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(

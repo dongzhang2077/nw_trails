@@ -10,6 +10,7 @@ import 'package:nw_trails/app/state/app_scope.dart';
 import 'package:nw_trails/core/constants/category_colors.dart';
 import 'package:nw_trails/core/models/landmark.dart';
 import 'package:nw_trails/core/models/landmark_category.dart';
+import 'package:nw_trails/features/landmarks/test_mode_panel.dart';
 
 class NwTrailsMap extends StatefulWidget {
   const NwTrailsMap({
@@ -30,6 +31,7 @@ class NwTrailsMap extends StatefulWidget {
 class _NwTrailsMapState extends State<NwTrailsMap> {
   MapboxMap? _mapboxMap;
   PointAnnotationManager? _annotationManager;
+  Cancelable? _annotationTapCancelable;
   PointAnnotation? _userMarker;
   StreamSubscription<geo.Position>? _locationSub;
   Uint8List? _markerImage;
@@ -40,9 +42,11 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
   final Map<(LandmarkCategory, bool), Uint8List> _pinImageCache = {};
 
   bool _joystickVisible = false;
+  bool _testModeVisible = false;
   bool _creatingMarker = false;
   double? _simLat;
   double? _simLng;
+  double _joystickSpeed = 5.0;
   String _currentStyleUri = MapboxStyles.MAPBOX_STREETS;
   String? _mapLoadErrorMessage;
   bool _styleFallbackAttempted = false;
@@ -74,6 +78,7 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
   @override
   void dispose() {
     _locationSub?.cancel();
+    _annotationTapCancelable?.cancel();
     super.dispose();
   }
 
@@ -93,8 +98,9 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
 
     final PointAnnotationManager annotationManager = await mapboxMap.annotations
         .createPointAnnotationManager();
-    annotationManager.addOnPointAnnotationClickListener(
-      _LandmarkClickListener(_onAnnotationTap),
+    _annotationTapCancelable?.cancel();
+    _annotationTapCancelable = annotationManager.tapEvents(
+      onTap: _onAnnotationTap,
     );
     _annotationManager = annotationManager;
     _landmarkAnnotations.clear();
@@ -269,14 +275,104 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
     );
   }
 
+  Future<void> _toggleTestModePanel() async {
+    if (_testModeVisible) {
+      await Navigator.of(context).maybePop();
+      return;
+    }
+
+    final appState = AppScope.of(context);
+    setState(() {
+      _testModeVisible = true;
+      _joystickVisible = false;
+    });
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext sheetContext) {
+        return TestModePanel(
+          landmarks: widget.landmarks,
+          activeRoute: appState.activeRoute,
+          currentPosition: _simLat != null && _simLng != null
+              ? <String, double>{'lat': _simLat!, 'lng': _simLng!}
+              : null,
+          joystickSpeed: _joystickSpeed,
+          usingInjectedLocation: appState.usingInjectedLocation,
+          completedLandmarkIds: appState.checkInRecords
+              .map((record) => record.landmarkId)
+              .toSet(),
+          nextRouteStopId: appState.activeRoute != null
+              ? appState.nextUnvisitedLandmarkIdForRoute(appState.activeRoute!.id)
+              : null,
+          onTeleport: (double lat, double lng) {
+            _simLat = lat;
+            _simLng = lng;
+            appState.injectLocation(lat, lng);
+            _mapboxMap?.flyTo(
+              CameraOptions(
+                center: Point(
+                  coordinates: Position(lng, lat),
+                ),
+                zoom: 16.0,
+              ),
+              MapAnimationOptions(duration: 800),
+            );
+          },
+          onUseDeviceLocation: () async {
+            final geo.Position? position = await appState.useDeviceLocation();
+            if (position == null) {
+              return null;
+            }
+
+            _simLat = position.latitude;
+            _simLng = position.longitude;
+            _mapboxMap?.flyTo(
+              CameraOptions(
+                center: Point(
+                  coordinates: Position(position.longitude, position.latitude),
+                ),
+                zoom: 16.0,
+              ),
+              MapAnimationOptions(duration: 800),
+            );
+
+            return <String, double>{
+              'lat': position.latitude,
+              'lng': position.longitude,
+            };
+          },
+          onJoystickSpeedChanged: (double speed) {
+            setState(() {
+              _joystickSpeed = speed;
+            });
+          },
+          onClose: () {
+            Navigator.of(sheetContext).maybePop();
+          },
+        );
+      },
+    );
+
+    if (!mounted) {
+      return;
+    }
+    setState(() {
+      _testModeVisible = false;
+    });
+  }
+
   void _onJoystickMove(StickDragDetails details) {
     final lat = _simLat;
     final lng = _simLng;
     if (lat == null || lng == null) return;
 
-    const speed = 0.00002;
-    _simLat = lat - details.y * speed;
-    _simLng = lng + details.x * speed;
+    // 速度可调节，基础速度乘以速度倍数
+    final baseSpeed = 0.00002 * _joystickSpeed;
+    _simLat = lat - details.y * baseSpeed;
+    _simLng = lng + details.x * baseSpeed;
     AppScope.of(context).injectLocation(_simLat!, _simLng!);
   }
 
@@ -353,19 +449,47 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
             spacing: 8,
             children: [
               FloatingActionButton.small(
+                heroTag: 'test_mode_toggle',
+                backgroundColor: _testModeVisible
+                    ? Theme.of(context).colorScheme.primaryContainer
+                    : null,
+                onPressed: _toggleTestModePanel,
+                tooltip: 'Test Mode',
+                child: Icon(
+                  _testModeVisible ? Icons.science : Icons.science_outlined,
+                  color: _testModeVisible
+                      ? Theme.of(context).colorScheme.primary
+                      : null,
+                ),
+              ),
+              FloatingActionButton.small(
                 heroTag: 'joystick_toggle',
-                onPressed: () =>
-                    setState(() => _joystickVisible = !_joystickVisible),
+                onPressed: () {
+                  bool shouldCloseTestPanel = false;
+                  setState(() {
+                    _joystickVisible = !_joystickVisible;
+                    if (_joystickVisible && _testModeVisible) {
+                      _testModeVisible = false;
+                      shouldCloseTestPanel = true;
+                    }
+                  });
+                  if (shouldCloseTestPanel) {
+                    Navigator.of(context).maybePop();
+                  }
+                },
+                tooltip: 'Joystick',
                 child: Icon(_joystickVisible ? Icons.close : Icons.gamepad),
               ),
               FloatingActionButton.small(
                 heroTag: 'zoom_in',
                 onPressed: () => _zoom(1),
+                tooltip: 'Zoom In',
                 child: const Icon(Icons.add),
               ),
               FloatingActionButton.small(
                 heroTag: 'zoom_out',
                 onPressed: () => _zoom(-1),
+                tooltip: 'Zoom Out',
                 child: const Icon(Icons.remove),
               ),
             ],
@@ -401,17 +525,5 @@ class _NwTrailsMapState extends State<NwTrailsMap> {
           ),
       ],
     );
-  }
-}
-
-class _LandmarkClickListener extends OnPointAnnotationClickListener {
-  _LandmarkClickListener(this.onTap);
-
-  final void Function(PointAnnotation) onTap;
-
-  @override
-  bool onPointAnnotationClick(PointAnnotation annotation) {
-    onTap(annotation);
-    return true;
   }
 }

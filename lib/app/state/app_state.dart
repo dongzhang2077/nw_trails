@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart' as geo;
 import 'package:nw_trails/core/models/badge_progress.dart';
@@ -5,6 +7,7 @@ import 'package:nw_trails/core/models/checkin_record.dart';
 import 'package:nw_trails/core/models/landmark.dart';
 import 'package:nw_trails/core/models/landmark_category.dart';
 import 'package:nw_trails/core/models/route_plan.dart';
+import 'package:nw_trails/core/network/backend_api_client.dart';
 import 'package:nw_trails/core/repositories/checkin_repository.dart';
 import 'package:nw_trails/core/repositories/landmark_repository.dart';
 import 'package:nw_trails/core/repositories/route_repository.dart';
@@ -32,14 +35,17 @@ class AppState extends ChangeNotifier {
     required RouteRepository routeRepository,
     required LocationService locationService,
     required MockLocationService mockLocationService,
+    BackendApiClient? backendApiClient,
   }) : _landmarkRepository = landmarkRepository,
        _checkInRepository = checkInRepository,
        _routeRepository = routeRepository,
        _locationService = locationService,
-       _mockLocationService = mockLocationService {
+       _mockLocationService = mockLocationService,
+       _backendApiClient = backendApiClient {
     _landmarks = _landmarkRepository.getAll();
     _routes = _routeRepository.getAll();
     _refreshCheckInRecords();
+    unawaited(_initializeBackendSync());
   }
 
   final LandmarkRepository _landmarkRepository;
@@ -47,11 +53,14 @@ class AppState extends ChangeNotifier {
   final RouteRepository _routeRepository;
   final LocationService _locationService;
   final MockLocationService _mockLocationService;
+  final BackendApiClient? _backendApiClient;
 
-  late final List<Landmark> _landmarks;
-  late final List<RoutePlan> _routes;
+  List<Landmark> _landmarks = <Landmark>[];
+  List<RoutePlan> _routes = <RoutePlan>[];
 
   List<CheckInRecord> _checkInRecords = <CheckInRecord>[];
+  bool _isSyncingBackend = false;
+  String? _syncError;
 
   int _selectedTabIndex = 0;
   LandmarkCategory? _selectedCategory;
@@ -59,13 +68,21 @@ class AppState extends ChangeNotifier {
 
   Stream<geo.Position> get locationStream => _mockLocationService.stream;
   geo.Position? get lastKnownPosition => _mockLocationService.lastKnownPosition;
+  bool get usingInjectedLocation => _mockLocationService.usingInjectedLocation;
 
   void injectLocation(double lat, double lng) =>
       _mockLocationService.injectLocation(lat, lng);
 
+  Future<geo.Position?> useDeviceLocation() async {
+    return _mockLocationService.useDeviceLocation();
+  }
+
   int get selectedTabIndex => _selectedTabIndex;
   LandmarkCategory? get selectedCategory => _selectedCategory;
   String? get activeRouteId => _activeRouteId;
+  bool get isSyncingBackend => _isSyncingBackend;
+  String? get syncError => _syncError;
+  bool get usingBackend => _backendApiClient != null;
 
   List<Landmark> get landmarks => List<Landmark>.unmodifiable(_landmarks);
   List<RoutePlan> get routes => List<RoutePlan>.unmodifiable(_routes);
@@ -151,6 +168,10 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> retryBackendSync() async {
+    await _syncFromBackend();
+  }
+
   Landmark? findLandmarkById(String landmarkId) {
     for (final Landmark landmark in _landmarks) {
       if (landmark.id == landmarkId) {
@@ -175,6 +196,10 @@ class AppState extends ChangeNotifier {
 
   void startRoute(String routeId) {
     _activeRouteId = routeId;
+    final backendApiClient = _backendApiClient;
+    if (backendApiClient != null) {
+      unawaited(backendApiClient.startRoute(routeId));
+    }
     notifyListeners();
   }
 
@@ -189,10 +214,8 @@ class AppState extends ChangeNotifier {
   Future<CheckInAttemptResult> attemptCheckIn(String landmarkId) async {
     final DateTime now = DateTime.now();
 
-    if (_checkInRepository.hasCheckInForDate(
-      landmarkId: landmarkId,
-      date: now,
-    )) {
+    if (_backendApiClient == null &&
+        _checkInRepository.hasCheckInForDate(landmarkId: landmarkId, date: now)) {
       return const CheckInAttemptResult(
         status: CheckInStatus.duplicate,
         message: 'You already checked in at this landmark today.',
@@ -239,6 +262,54 @@ class AppState extends ChangeNotifier {
       );
     }
 
+    final backendApiClient = _backendApiClient;
+    if (backendApiClient != null) {
+      final BackendCheckInResult backendResult = await backendApiClient
+          .createCheckIn(
+            landmarkId: landmarkId,
+            latitude: lastPosition.latitude,
+            longitude: lastPosition.longitude,
+            note: null,
+          );
+
+      switch (backendResult.status) {
+        case BackendCheckInStatus.success:
+          await _refreshCheckInRecordsFromBackend();
+          final String routeMessage = _buildRouteProgressMessageAfterCheckIn(
+            landmarkId: landmarkId,
+          );
+          notifyListeners();
+          return CheckInAttemptResult(
+            status: CheckInStatus.success,
+            message: backendResult.message.isEmpty
+                ? 'Check-in saved. ${badgeProgress.nextBadgeHint}$routeMessage'
+                : backendResult.message,
+          );
+        case BackendCheckInStatus.duplicate:
+          return CheckInAttemptResult(
+            status: CheckInStatus.duplicate,
+            message: backendResult.message,
+          );
+        case BackendCheckInStatus.outOfRange:
+          return CheckInAttemptResult(
+            status: CheckInStatus.outOfRange,
+            message: backendResult.message,
+            distanceMeters: backendResult.distanceMeters,
+          );
+        case BackendCheckInStatus.unauthorized:
+          return CheckInAttemptResult(
+            status: CheckInStatus.permissionDenied,
+            message: backendResult.message,
+          );
+        case BackendCheckInStatus.validationError:
+        case BackendCheckInStatus.unknownError:
+          return CheckInAttemptResult(
+            status: CheckInStatus.outOfRange,
+            message: backendResult.message,
+          );
+      }
+    }
+
     _checkInRepository.add(
       CheckInRecord(landmarkId: landmarkId, checkedInAt: now, note: null),
     );
@@ -254,6 +325,50 @@ class AppState extends ChangeNotifier {
       status: CheckInStatus.success,
       message: 'Check-in saved. ${badgeProgress.nextBadgeHint}$routeMessage',
     );
+  }
+
+  Future<void> _initializeBackendSync() async {
+    if (_backendApiClient == null) {
+      return;
+    }
+    await _syncFromBackend();
+  }
+
+  Future<void> _syncFromBackend() async {
+    final backendApiClient = _backendApiClient;
+    if (backendApiClient == null) {
+      return;
+    }
+
+    _isSyncingBackend = true;
+    _syncError = null;
+    notifyListeners();
+
+    try {
+      final List<Landmark> landmarks = await backendApiClient.fetchLandmarks();
+      final List<RoutePlan> routes = await backendApiClient.fetchRoutes();
+      final List<CheckInRecord> checkIns = await backendApiClient
+          .fetchCheckIns();
+
+      _landmarks = landmarks;
+      _routes = routes;
+      _setCheckInRecords(checkIns);
+    } catch (error) {
+      _syncError =
+          'Backend sync failed. Check API_BASE_URL / credentials and retry.';
+    } finally {
+      _isSyncingBackend = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> _refreshCheckInRecordsFromBackend() async {
+    final backendApiClient = _backendApiClient;
+    if (backendApiClient == null) {
+      return;
+    }
+    final List<CheckInRecord> checkIns = await backendApiClient.fetchCheckIns();
+    _setCheckInRecords(checkIns);
   }
 
   String _buildRouteProgressMessageAfterCheckIn({required String landmarkId}) {
@@ -281,7 +396,11 @@ class AppState extends ChangeNotifier {
   }
 
   void _refreshCheckInRecords() {
-    _checkInRecords = List<CheckInRecord>.from(_checkInRepository.getAll())
+    _setCheckInRecords(_checkInRepository.getAll());
+  }
+
+  void _setCheckInRecords(List<CheckInRecord> records) {
+    _checkInRecords = List<CheckInRecord>.from(records)
       ..sort((CheckInRecord a, CheckInRecord b) {
         return b.checkedInAt.compareTo(a.checkedInAt);
       });

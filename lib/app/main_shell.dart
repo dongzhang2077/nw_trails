@@ -20,9 +20,30 @@ class MainShell extends StatelessWidget {
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: appState.selectedTabIndex,
-        children: pages,
+      body: Column(
+        children: <Widget>[
+          if (appState.isSyncingBackend)
+            const LinearProgressIndicator(minHeight: 3),
+          if (appState.syncError != null)
+            MaterialBanner(
+              content: Text(appState.syncError!),
+              leading: const Icon(Icons.sync_problem_outlined),
+              actions: <Widget>[
+                TextButton(
+                  onPressed: () {
+                    appState.retryBackendSync();
+                  },
+                  child: const Text('RETRY'),
+                ),
+              ],
+            ),
+          Expanded(
+            child: IndexedStack(
+              index: appState.selectedTabIndex,
+              children: pages,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: appState.selectedTabIndex,
