@@ -41,6 +41,21 @@ flutter pub get
 flutter run
 ```
 
+Backend integration run (Android emulator + local backend):
+
+```bash
+flutter run -d android \
+  --dart-define=USE_BACKEND=true \
+  --dart-define=API_BASE_URL=http://10.0.2.2:8080/api/v1 \
+  --dart-define=API_USERNAME=student01 \
+  --dart-define=API_PASSWORD=Passw0rd! \
+  --dart-define=MAPBOX_ACCESS_TOKEN=<your_mapbox_public_token>
+```
+
+For iOS simulator or desktop app, use:
+
+- `API_BASE_URL=http://localhost:8080/api/v1`
+
 Android-first run (recommended for this project):
 
 ```bash
@@ -164,4 +179,5 @@ git checkout -b feature/alice-checkin-ui
 - UI/UX sync snapshot: `docs/design/ui_ux_flow_sync.md`
 - Proposal scope snapshot: `docs/proposal/proposal_scope_sync.md`
 - lib file ownership map: `docs/development/lib_structure_and_ownership.md`
+- Manual integration test runbook: `docs/testing/manual_integration_test_runbook.md`
 - Final submission checklist: `docs/final_submission_checklist.md`

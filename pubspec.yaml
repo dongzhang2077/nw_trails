@@ -9,11 +9,13 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  http: ^1.2.2
   permission_handler: ^12.0.1
   shared_preferences: ^2.5.4
   geolocator: ^14.0.2
   mapbox_maps_flutter: ^2.19.1
   flutter_joystick: ^0.2.2
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
