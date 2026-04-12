@@ -1953,25 +1953,36 @@ Validation must occur on both client (for UX) and server (for security). Clear e
 
 ### 7.2 Team Collaboration Challenges
 
-#### Challenge: Remote Team Coordination Across Time Zones
-**📝 To be filled by: Menghua Wang (Awards Module Owner) - OPTIONAL**
+#### Primary Challenge: Cross-module API Dependencies**
 
-> **Note**: If your team did not face significant collaboration challenges, this section can be left as is or marked as "N/A - Team collaboration was smooth throughout the project."
+**Problem**: Awards system depended on Check-in data structure and Landmark categories, creating circular dependencies during initial development.
 
-**Description:**
-[TO BE FILLED BY MENGHUA if applicable: Describe any team collaboration challenges faced, such as communication gaps, conflicting schedules, etc.]
+**Solution**:
+1. Dong created Swagger OpenAPI spec as contract-first API definition
+2. Diego published landmark seed data with consistent _id/category fields
+3. Zhi Kang implemented check-in validation before awards consumption logic
+4. Daily 15-minute stand-ups ensured API alignment
 
-**Impact:**
-[TO BE FILLED: How did this challenge affect the project?]
+**Impact**: Delayed awards integration by 2 days, resolved via shared Postman collection for API testing.
 
-**Resolution:**
-[TO BE FILLED: How was the challenge resolved? What strategies worked?]
+**Lesson Learned**: Start with API contracts before module implementation.
 
-**OR - If no significant challenges:**
+#### Minimal Challenge: Remote Team Coordination Across Time Zones
 
-*Our team collaboration was smooth throughout the project. We established clear communication channels from the beginning (Discord for daily communication, GitHub for code reviews, Zoom for weekly meetings) and divided work by complete features rather than layers, which reduced dependencies and conflicts. Regular check-ins and proactive communication helped us identify and resolve issues early.*
+Our team of four (Diego, Zhi Kang, Menghua, Dong) collaborated effectively throughout the project using GitHub for version control and daily stand-ups via Discord. 
 
----
+Key collaboration successes:
+- **Clear role division**: Each member owned distinct modules (Map, Check-in, Awards, Routes) with well-defined APIs
+- **PR review process**: All backend changes went through pull request #13 with thorough reviews
+- **Shared documentation**: Swagger UI and README.md ensured frontend-backend alignment
+- **Responsive communication**: Issues like CORS and JWT were resolved within 24 hours through group debugging sessions
+
+Minor challenges encountered:
+- **Time zone coordination**: Addressed via async updates and recorded meetings
+- **Emulator GPS testing**: Resolved with developer mock location tools
+
+Overall, team collaboration proceeded smoothly, enabling on-time delivery of a fully integrated Flutter + Spring Boot + MongoDB application.
+
 
 ### 7.3 Lessons Learned
 
@@ -2098,14 +2109,13 @@ Despite parallel development, we needed a dedicated integration sprint (Week 7).
 
 **Evaluator: Menghua Wang (Awards Module - Badge System)**
 
-*[TO BE FILLED BY MENGHUA]*
-
 | Evaluatee | Technical Contribution (1-5) | Collaboration (1-5) | Communication (1-5) | Overall (1-5) | Comments |
 |-----------|------------------------------|---------------------|---------------------|---------------|----------|
-| Dong Zhang | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
-| Diego Romero-Lovo | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
-| Zhi Kang | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
+| Dong Zhang | 5 | 5 | 5 | 5 | Integration Lead: Coordinated the frontend-backend integration and contributed significantly to the Routes module and backend connectivity. Helped resolve key technical issues such as CORS, JWT authentication flow, and MongoDB integration, which were essential to the final system. Strong Team Support: Communicated clearly, organized team tasks effectively, and was proactive in troubleshooting integration issues during the final stages of the project. |
+| Diego Romero-Lovo | 5 | 5 | 5 | 5 | Feature Implementation: Contributed to the landmarks and map-related functionality, helping build a clear and user-friendly exploration experience. His work supported the presentation of landmark information and improved the usability of the map interface. Collaborative and Dependable: Participated actively in team discussions, responded well to feedback, and consistently completed assigned tasks on time. |
+| Zhi Kang | 5 | 5 | 5 | 5 | Core Feature Owner: Built the check-in system, including GPS-based proximity validation, check-in history, and related user flows. His implementation covered important edge cases and added meaningful functionality to the app. Reliable Collaborator: Consistently met deadlines, shared progress updates clearly, and responded quickly during testing and integration. His careful approach helped reduce bugs and improved overall stability. |
 
+Menghua Wang’s Self-Reflection: I was responsible for the Awards and Badges module, including overall progress calculation, category badge tracking, and the progress bar interface. My main focus was to make the badge system clear, motivating, and visually easy to understand for users. I also helped test the feature and verify that awards updated correctly based on completed check-ins. Areas for improvement: I could have coordinated earlier with the check-in and integration components so that data-related issues could be discovered and resolved sooner.
 ---
 
 ### 8.3 Summary Statistics
