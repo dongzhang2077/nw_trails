@@ -2072,15 +2072,15 @@ Despite parallel development, we needed a dedicated integration sprint (Week 7).
 
 ---
 
-**Evaluator: Diego Romero-Lovo (Landmarks Module - Map & UI)**
-
-*[TO BE FILLED BY DIEGO]*
+**Evaluator: Diego Romero-Lovo (Map Integration, Location Services, Persistence)**
 
 | Evaluatee | Technical Contribution (1-5) | Collaboration (1-5) | Communication (1-5) | Overall (1-5) | Comments |
 |-----------|------------------------------|---------------------|---------------------|---------------|----------|
-| Dong Zhang | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
-| Zhi Kang | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
-| Menghua Wang | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
+| Dong Zhang | 5 | 5 | 5 | 5 | **Outstanding Leadership**: Dong consistently went beyond what was required, demonstrating strong determination and commitment throughout the project. He provided clear direction, ensured smooth integration across modules, and maintained high standards for the team. His leadership was a key factor in the project’s success. |
+| Zhi Kang | 5 | 5 | 5 | 5 | **Consistent Contributor**: Showed active involvement throughout the entire project and made meaningful contributions to critical parts of the application. Demonstrated reliability and technical strength, helping ensure stability and completeness of core features. |
+| Menghua Wang | 5 | 5 | 5 | 5 | **Dedicated and Passionate**: Demonstrated strong determination and commitment to her assigned module. Her passion for the work was evident, and she consistently delivered quality results while staying engaged with the team’s goals. |
+
+**Diego Romero-Lovo's Self-Reflection:** I developed the map functionality, including controls and integration with location-based services. I also worked on handling real-time location streams and contributed to migrating several modules from in-memory storage to MongoDB for persistent data management.
 
 ---
 
