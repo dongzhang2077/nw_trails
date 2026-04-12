@@ -22,6 +22,38 @@ NW Trails is a Flutter app for exploring New Westminster landmarks with GPS chec
 
 > Backend setup guide: `../../backend/nw-trails-backend/README.md`
 
+## Running Modes
+
+The app supports two running modes controlled by the `USE_BACKEND` compile-time flag:
+
+| Mode | Flag | Description |
+|------|------|-------------|
+| **Backend Mode** | `USE_BACKEND=true` (default) | Connects to real backend API. Requires login + backend running. |
+| **Stub Mode** | `USE_BACKEND=false` | Uses local mock data. No login required, works offline. |
+
+### Backend Mode (Default)
+
+Use this for full functionality including:
+- Real user authentication (login/logout)
+- Photo upload to server
+- Persistent check-in history
+- Multi-device data sync
+
+**Requirements:**
+- Backend running at `http://localhost:8080`
+- Valid Mapbox token
+- Test login accounts (see below)
+
+### Stub Mode (Offline Demo)
+
+Use this for quick UI testing without backend:
+- No login required (skips auth screen)
+- Uses mock landmark/route data
+- Check-ins saved locally only
+- Photos not uploaded
+
+**Use case:** Frontend development, UI testing, screenshots.
+
 ## Quick Start (Android Emulator)
 
 From `proj/app/nw_trails`:
@@ -33,25 +65,92 @@ flutter test
 flutter build apk --debug
 ```
 
-PowerShell run example:
+### Option A: Run with Backend (Full Features)
+
+PowerShell:
 
 ```powershell
 $token = (Get-Content '<path-to-your-mapbox-token.txt>' -Raw).Trim()
-flutter run -d emulator-5554 --disable-dds --dart-define=API_BASE_URL=http://10.0.2.2:8080/api/v1 --dart-define=MAPBOX_ACCESS_TOKEN=$token
+flutter run -d emulator-5554 --disable-dds `
+  --dart-define=USE_BACKEND=true `
+  --dart-define=API_BASE_URL=http://10.0.2.2:8080/api/v1 `
+  --dart-define=MAPBOX_ACCESS_TOKEN=$token
 ```
 
-macOS/Linux bash run example:
+macOS/Linux:
 
 ```bash
 TOKEN=$(cat <path-to-your-mapbox-token.txt>)
 flutter run -d emulator-5554 --disable-dds \
+  --dart-define=USE_BACKEND=true \
   --dart-define=API_BASE_URL=http://10.0.2.2:8080/api/v1 \
   --dart-define=MAPBOX_ACCESS_TOKEN=$TOKEN
 ```
 
-If you run on iOS simulator/desktop instead of Android emulator, use:
+### Option B: Run with Config File (Recommended for Daily Development)
 
-- `API_BASE_URL=http://localhost:8080/api/v1`
+**Step 1**: Create `env.json` file (copy from template):
+
+```bash
+cp env.json.example env.json
+```
+
+Then edit `env.json` with your actual token (get one from https://account.mapbox.com/):
+
+```json
+{
+  "MAPBOX_ACCESS_TOKEN": "pk.your_actual_mapbox_token_here",
+  "API_BASE_URL": "http://10.0.2.2:8080/api/v1",
+  "USE_BACKEND": "true"
+}
+```
+
+⚠️ **Security Note**: Never commit your actual `env.json` file to git. It should already be in `.gitignore`.
+
+**Step 2**: Run with config file:
+
+```bash
+flutter run --dart-define-from-file=env.json
+```
+
+✅ **Advantages**:
+- No need to paste token every time
+- Can add multiple config files (e.g., `env.staging.json`, `env.production.json`)
+- `env.json` is ignored by git (won't leak your token)
+
+### Option C: VS Code Launch Configuration
+
+If you use VS Code, press `F5` to run with pre-configured settings:
+
+1. Open VS Code in the project folder
+2. Press `Ctrl+Shift+D` (Run and Debug)
+3. Select configuration:
+   - **"NW Trails (Android + Backend)"** - Full features with backend
+   - **"NW Trails (Stub Mode)"** - No backend required
+   - **"NW Trails (Chrome Web)"** - Run in browser
+
+Edit `.vscode/launch.json` to update the Mapbox token.
+
+### Option D: Run in Stub Mode (No Backend)
+
+```bash
+flutter run -d emulator-5554 --disable-dds --dart-define=USE_BACKEND=false
+```
+
+**Note:** When `USE_BACKEND=false`, the app will:
+- Skip the login screen
+- Show mock landmarks and routes
+- Allow check-ins without validation
+- Not upload any photos
+
+### Device-Specific URLs
+
+| Platform | API_BASE_URL |
+|----------|--------------|
+| Android Emulator | `http://10.0.2.2:8080/api/v1` |
+| iOS Simulator | `http://localhost:8080/api/v1` |
+| Desktop (Windows/Mac/Linux) | `http://localhost:8080/api/v1` |
+| Physical Device | `http://<your-computer-ip>:8080/api/v1` |
 
 ## Test Login Accounts
 
@@ -99,6 +198,63 @@ Use in-app test mode/location simulation to move near the landmark before checki
 Confirm backend is running and seeded users exist.
 
 If you upgraded from an older backend build, reseed users in MongoDB and restart backend.
+
+### 5) App goes straight to map, skips login
+
+You are running in **Stub Mode** (`USE_BACKEND=false`). To enable login:
+
+```bash
+# Add this flag to your flutter run command:
+--dart-define=USE_BACKEND=true
+```
+
+### 6) "Backend API client not configured" error
+
+You are running in Backend Mode but the app can't connect to the backend. Either:
+
+- **Start the backend**: See `../../backend/nw-trails-backend/README.md`
+- **Or switch to Stub Mode**: Add `--dart-define=USE_BACKEND=false`
+
+### 7) Map shows blank / grey screen or app crashes frequently
+
+**Cause**: Mapbox token is missing or invalid.
+
+**Solutions**:
+
+1. **Verify token is set**:
+   ```bash
+   # Check if token is being passed
+   flutter run --dart-define=MAPBOX_ACCESS_TOKEN=your_token_here -v
+   ```
+
+2. **Use config file method** (see Option B above):
+   ```bash
+   # Create env.json with your token, then:
+   flutter run --dart-define-from-file=env.json
+   ```
+
+3. **Check token validity**:
+   - Go to https://account.mapbox.com/
+   - Ensure your token has `DOWNLOADS:READ` and `MAPS:READ` scopes
+   - Public tokens (pk.*) should work for development
+
+4. **Clear Flutter cache** if token was recently added:
+   ```bash
+   flutter clean
+   flutter pub get
+   flutter run --dart-define-from-file=env.json
+   ```
+
+### 8) ".env file not working"
+
+This project uses **compile-time environment variables** (`--dart-define`), not runtime `.env` files. 
+
+- ❌ Don't use: `flutter_dotenv` package or `.env` file
+- ✅ Use: `--dart-define-from-file=env.json` (see Option B above)
+
+The difference:
+- `--dart-define`: Variables embedded at compile time (recommended for Flutter)
+- `.env` file: Read at runtime (requires additional packages)
 
 ## Demo Video
 

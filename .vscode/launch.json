@@ -2,12 +2,34 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "NW Trails (Android)",
+      "name": "NW Trails (Android + Backend) - ADD YOUR TOKEN",
       "request": "launch",
       "type": "dart",
       "deviceId": "android",
       "toolArgs": [
-        "--disable-dds"
+        "--disable-dds",
+        "--dart-define-from-file=env.json"
+      ]
+    },
+    {
+      "name": "NW Trails (Stub Mode - No Backend) - ADD YOUR TOKEN",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "android",
+      "toolArgs": [
+        "--disable-dds",
+        "--dart-define=MAPBOX_ACCESS_TOKEN=pk.your_mapbox_token_here",
+        "--dart-define=USE_BACKEND=false"
+      ]
+    },
+    {
+      "name": "NW Trails (Chrome Web) - ADD YOUR TOKEN",
+      "request": "launch",
+      "type": "dart",
+      "deviceId": "chrome",
+      "toolArgs": [
+        "--disable-dds",
+        "--dart-define-from-file=env.json"
       ]
     }
   ]
