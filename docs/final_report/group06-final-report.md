@@ -1882,7 +1882,7 @@ Token refresh must be serialized to prevent race conditions. Using a queue patte
 **📝 Written by: Zhi Kang (Check-in Module Owner)**
 
 **Description:**
-GPS coordinates from mobile devices have varying accuracy (3-20 meters). During testing, users standing right next to a landmark were sometimes rejected because their GPS coordinates drifted beyond the 50-meter threshold. Additionally, different devices reported coordinates with different precision levels.
+GPS coordinates from mobile devices have varying accuracy (3-20 meters). During testing, users standing right next to a landmark were sometimes rejected because their GPS coordinates drifted beyond the 50-meter threshold. Additionally, different devices reported coordinates with different precision levels.In the backend, I calculate user-to-landmark distance in NwTrailsService.java with the Haversine formula (calculateDistanceMeters), using latitude/longitude in radians and Earth radius in meters.
 
 **Impact:**
 - Poor user experience - legitimate users couldn't check in despite being physically present
@@ -1891,6 +1891,8 @@ GPS coordinates from mobile devices have varying accuracy (3-20 meters). During 
 
 **Solution:**
 Implemented multiple strategies:
+After the distance is computed and rounded, I compare it against our fixed threshold of 50 meters.
+If the value is over 50, the API blocks the check-in and returns OUT_OF_RANGE with distance details; otherwise, the check-in is allowed.
 1. **Haversine Formula** for accurate distance calculation
 2. **GPS Accuracy Check**: Validate device's reported accuracy
 3. **Test Mode**: Added mock location injection for testing
@@ -2090,9 +2092,12 @@ Despite parallel development, we needed a dedicated integration sprint (Week 7).
 
 | Evaluatee | Technical Contribution (1-5) | Collaboration (1-5) | Communication (1-5) | Overall (1-5) | Comments |
 |-----------|------------------------------|---------------------|---------------------|---------------|----------|
-| Dong Zhang | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
-| Diego Romero-Lovo | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
-| Menghua Wang | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
+| Dong Zhang | 5 | 5 | 5 | 5 | 5 |Dong played an important role as the Integration Lead and was responsible for the Routes module, technical architecture, and part of the final presentation. He not only completed his own features, but also helped connect different parts of the project together. His work on integration made the system more complete and stable.
+
+As a leader, Dong showed strong responsibility throughout the project. He helped organize tasks, supported team communication, and made sure the project moved forward on time. He was also willing to solve problems when technical challenges came up, such as integration and authentication issues. Overall, he made a valuable contribution both technically and as a team leader.
+
+| Diego Romero-Lovo | 5 | 5 | 5 | 5 | Diego was responsible for the Map and Landmarks module. He did a solid job in building the map view, category filters, and landmark detail pages. His work helped make the app more interactive and user-friendly. During the presentation, he clearly explained how users can explore landmarks and get directions, which showed a good understanding of both the technical and practical side of the feature. |
+| Menghua Wang | 5 | 5 | 5 | 5 | Menghua was responsible for the Awards and Badges system. She completed this part well and made the progress tracking feature easy to understand. Her explanation of the Bronze, Silver, and Gold badge system was clear and organized. This feature added motivation for users and improved the overall experience of the app. |
 
 ---
 
