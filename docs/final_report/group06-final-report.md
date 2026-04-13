@@ -1879,25 +1879,53 @@ Token refresh must be serialized to prevent race conditions. Using a queue patte
 ---
 
 #### Challenge 3: GPS Coordinate Precision & Proximity Validation
-**📝 Written by: Zhi Kang (Check-in Module Owner)**
 
-**Description:**
+**Problem:**
 GPS coordinates from mobile devices have varying accuracy (3-20 meters). During testing, users standing right next to a landmark were sometimes rejected because their GPS coordinates drifted beyond the 50-meter threshold. Additionally, different devices reported coordinates with different precision levels.
 
 **Impact:**
-- Poor user experience - legitimate users couldn't check in despite being physically present
-- Difficult to debug due to device-specific variations
-- Required extensive field testing
+Poor user experience - legitimate users couldn't check in despite being physically present at landmarks.
 
 **Solution:**
 Implemented multiple strategies:
-1. **Haversine Formula** for accurate distance calculation
-2. **GPS Accuracy Check**: Validate device's reported accuracy
-3. **Test Mode**: Added mock location injection for testing
 
-See Section 6.1 for Haversine formula implementation details.
+1. **Haversine Formula** for accurate distance calculation:
+```java
+public double calculateDistance(double lat1, double lng1, 
+                                double lat2, double lng2) {
+    final int R = 6371000; // Earth's mean radius in meters
+    double latDistance = Math.toRadians(lat2 - lat1);
+    double lngDistance = Math.toRadians(lng2 - lng1);
+    
+    double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+             + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+             * Math.sin(lngDistance / 2) * Math.sin(lngDistance / 2);
+    double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    
+    return R * c; // Distance in meters
+}
+```
 
-**Lessons Learned:**
+2. **GPS Accuracy Check**: Validate device's reported accuracy before accepting check-in
+
+3. **Test Mode**: Added mock location injection for testing:
+```dart
+class MockLocationService implements LocationService {
+  void injectLocation(double lat, double lng) {
+    _injectedPosition = Position(latitude: lat, longitude: lng);
+  }
+}
+```
+
+**Validation Results:**
+| Test Scenario | Distance | Result |
+|--------------|----------|--------|
+| Standing at landmark | 2-5m | ✅ Accepted |
+| 40m from landmark | 35-45m | ✅ Accepted |
+| 55m from landmark | 52-58m | ❌ Rejected |
+| Across street | 15-25m | ✅ Accepted |
+
+**Lesson Learned:**
 GPS validation must account for real-world device accuracy variations. Providing a test mode is essential for development and demos.
 
 ---
@@ -2101,9 +2129,12 @@ Despite parallel development, we needed a dedicated integration sprint (Week 7).
 
 | Evaluatee | Technical Contribution (1-5) | Collaboration (1-5) | Communication (1-5) | Overall (1-5) | Comments |
 |-----------|------------------------------|---------------------|---------------------|---------------|----------|
-| Dong Zhang | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
-| Diego Romero-Lovo | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
-| Menghua Wang | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] | [TO BE FILLED] |
+| Dong Zhang | 5 | 5 | 5 | 5 | 5 |Dong played an important role as the Integration Lead and was responsible for the Routes module, technical architecture, and part of the final presentation. He not only completed his own features, but also helped connect different parts of the project together. His work on integration made the system more complete and stable.
+
+As a leader, Dong showed strong responsibility throughout the project. He helped organize tasks, supported team communication, and made sure the project moved forward on time. He was also willing to solve problems when technical challenges came up, such as integration and authentication issues. Overall, he made a valuable contribution both technically and as a team leader.
+
+| Diego Romero-Lovo | 5 | 5 | 5 | 5 | Diego was responsible for the Map and Landmarks module. He did a solid job in building the map view, category filters, and landmark detail pages. His work helped make the app more interactive and user-friendly. During the presentation, he clearly explained how users can explore landmarks and get directions, which showed a good understanding of both the technical and practical side of the feature. |
+| Menghua Wang | 5 | 5 | 5 | 5 | Menghua was responsible for the Awards and Badges system. She completed this part well and made the progress tracking feature easy to understand. Her explanation of the Bronze, Silver, and Gold badge system was clear and organized. This feature added motivation for users and improved the overall experience of the app. |
 
 ---
 
